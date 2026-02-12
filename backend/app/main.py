@@ -28,8 +28,8 @@ app = FastAPI(title="Seguimiento de Actividades - Prototipo")
 origins = [
     "http://127.0.0.1:5173",
     "http://localhost:5173",
-    "https://yancaicedo.github.io",
-    "https://yancaicedo.github.io/actividades-proyecto",
+    "https://yacaicedo6.github.io",
+    "https://yacaicedo6.github.io/actividades-proyecto",
 ]
 app.add_middleware(
     CORSMiddleware,
