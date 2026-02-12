@@ -84,12 +84,24 @@ def get_activities(
 ):
     return crud.list_activities(db, current_user=current_user, status=status, assigned_to=assigned_to, page=page, per_page=per_page)
 
-@app.patch('/activities/{activity_id}', response_model=schemas.ActivityOut)
+@app.patch('/activities/{activity_id}')
 def update_activity(activity_id: int, activity_update: schemas.ActivityUpdate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     result = crud.update_activity(db, activity_id, current_user.id, activity_update, current_user.username)
     if not result:
         raise HTTPException(status_code=404, detail='Activity not found')
-    return result
+    # Return simple JSON to avoid serialization issues
+    return {
+        'id': result.id,
+        'title': result.title,
+        'description': result.description,
+        'status': result.status,
+        'assigned_to': result.assigned_to,
+        'due_date': result.due_date.isoformat() if result.due_date else None,
+        'timestamp': result.timestamp.isoformat() if result.timestamp else None,
+        'updated_at': result.updated_at.isoformat() if result.updated_at else None,
+        'injected_by': result.injected_by,
+        'owner_id': result.owner_id
+    }
 
 @app.delete('/activities/{activity_id}')
 def delete_activity(activity_id: int, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):

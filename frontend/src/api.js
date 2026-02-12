@@ -53,12 +53,21 @@ export async function createActivity(token, payload){
 }
 
 export async function updateActivity(token, activityId, payload){
-  const res = await fetch(`${API_BASE}/activities/${activityId}`, {
-    method:'PATCH', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload)
-  })
-  if(!res.ok) throw new Error('Update failed')
-  return await res.json()
+  try {
+    const res = await fetch(`${API_BASE}/activities/${activityId}`, {
+      method:'PATCH', 
+      headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    })
+    if(!res.ok) {
+      const errorText = await res.text()
+      throw new Error(`Update failed: ${res.status}`)
+    }
+    return await res.json()
+  } catch(error) {
+    console.error('updateActivity error:', error)
+    throw error
+  }
 }
 
 export async function deleteActivity(token, activityId){
