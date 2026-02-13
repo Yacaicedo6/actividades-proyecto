@@ -523,9 +523,9 @@ export default function App(){
         Estado:
         <select value={filterStatus || ''} onChange={e=>setFilterStatus(e.target.value || null)}>
           <option value="">Todos</option>
-          <option value="New">New</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Done">Done</option>
+          <option value="En Curso">En Curso</option>
+          <option value="Completada">Completada</option>
+          <option value="Cancelada">Cancelada</option>
         </select>
         <button onClick={doExport}>Exportar CSV</button>
         <button onClick={()=>{setShowWebhookSettings(!showWebhookSettings); if(!showWebhookSettings) loadWebhooks()}}>
@@ -588,12 +588,13 @@ export default function App(){
                 </em>
               </div>
               <div style={{marginTop: 8}}>
-                <button onClick={() => changeStatus(a.id, 'New')} style={{background: a.status === 'New' ? '#007bff' : '#ccc', marginRight: 4}}>New</button>
-                <button onClick={() => changeStatus(a.id, 'In Progress')} style={{background: a.status === 'In Progress' ? '#ffc107' : '#ccc', marginRight: 4}}>En Progreso</button>
-                <button onClick={() => changeStatus(a.id, 'Done')} style={{background: a.status === 'Done' ? '#28a745' : '#ccc', color: 'white', marginRight: 4}}>Hecho</button>
-                <button onClick={() => assign(a.id, a.assigned_to)} style={{marginRight: 4}}>Asignar (manual)</button>
+                <button onClick={() => changeStatus(a.id, 'En Curso')} style={{background: a.status === 'En Curso' ? '#ffc107' : '#ccc', marginRight: 4}}>En Curso</button>
+                <button onClick={() => changeStatus(a.id, 'Completada')} style={{background: a.status === 'Completada' ? '#28a745' : '#ccc', color: 'white', marginRight: 4}}>Completada</button>
+                <button onClick={() => changeStatus(a.id, 'Cancelada')} style={{background: a.status === 'Cancelada' ? '#dc3545' : '#ccc', color: 'white', marginRight: 4}}>Cancelada</button>
                 <button onClick={() => setShowCollaboratorAssign(a.id)} style={{marginRight: 4, background: '#17a2b8', color: 'white'}}>Asignar Colaborador</button>
-                <button onClick={() => changeDueDate(a.id, a.due_date)} style={{marginRight: 4}}>Plazo</button>
+                {currentUser?.role === 'core' && (
+                  <button onClick={() => changeDueDate(a.id, a.due_date)} style={{marginRight: 4}}>Plazo</button>
+                )}
                 {currentUser?.role === 'core' && (
                   <button onClick={() => removeActivity(a.id)} style={{marginRight: 4, background: '#dc3545', color: 'white'}}>Eliminar</button>
                 )}

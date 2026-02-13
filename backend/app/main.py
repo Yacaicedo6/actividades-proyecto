@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from . import models, schemas, crud, auth
 from .database import engine, Base, get_db
-from .email_service import send_invitation_email, send_deadline_email
+from .email_service import send_invitation_email, send_deadline_email, send_assignment_notification_email
 import csv
 import io
 import os
@@ -378,6 +378,17 @@ def assign_activity(activity_id: int, body: schemas.AssignActivityRequest, curre
         raise HTTPException(status_code=404, detail='Activity not found')
     if not collaborator:
         raise HTTPException(status_code=404, detail='Collaborator not found')
+    
+    # Enviar email de notificación al colaborador asignado
+    if collaborator.email:
+        send_assignment_notification_email(
+            to_email=collaborator.email,
+            activity_title=activity.title,
+            activity_description=activity.description or '',
+            assigner_name=current_user.username
+        )
+    
+    # Si también se creó una invitación (para nuevos usuarios), enviar ese email también
     if invitation:
         send_invitation_email(
             to_email=collaborator.email or collaborator.username,

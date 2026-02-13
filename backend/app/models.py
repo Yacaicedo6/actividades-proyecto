@@ -20,7 +20,7 @@ class Activity(Base):
     title = Column(String, index=True)
     description = Column(Text, nullable=True)
     injected_by = Column(String, nullable=True)
-    status = Column(String, default="New", index=True)  # New, In Progress, Done
+    status = Column(String, default="En Curso", index=True)  # En Curso, Completada, Cancelada
     assigned_to = Column(String, nullable=True)
     assigned_email = Column(String, nullable=True)
     due_date = Column(DateTime, nullable=True)
@@ -50,7 +50,7 @@ class SubActivity(Base):
     activity = relationship("Activity", back_populates="subtasks")
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    status = Column(String, default="New")  # New, In Progress, Done
+    status = Column(String, default="En Curso")  # En Curso, Completada, Cancelada
     order = Column(Integer, default=0)
     completed_at = Column(DateTime, nullable=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)

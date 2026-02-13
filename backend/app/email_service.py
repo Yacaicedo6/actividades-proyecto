@@ -98,6 +98,82 @@ Sistema de Seguimiento de Actividades
         return False
 
 
+def send_assignment_notification_email(to_email: str, activity_title: str, activity_description: str, assigner_name: str):
+    """Enviar email de notificación cuando se asigna una actividad a un colaborador"""
+    if not SMTP_EMAIL or not SMTP_PASSWORD:
+        print(f"[WARNING] Email no configurado. Credenciales faltantes en .env")
+        return False
+    
+    try:
+        # Crear mensaje
+        message = MIMEMultipart('mixed')
+        message['Subject'] = f"Nueva actividad asignada: {activity_title}"
+        message['From'] = SMTP_EMAIL
+        message['To'] = to_email
+
+        # Cuerpo alternativo (plain + html)
+        alt = MIMEMultipart('alternative')
+
+        text_part = f"""
+Hola,
+
+{assigner_name} te ha asignado una nueva actividad:
+
+{activity_title}
+{activity_description or ''}
+
+Accede a la plataforma para ver los detalles:
+{FRONTEND_URL}
+
+¡Saludos!
+Sistema de Seguimiento de Actividades
+"""
+
+        html_part = f"""
+<html>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+      <h2 style="color: #2c3e50;">Nueva actividad asignada</h2>
+      <p><strong>{assigner_name}</strong> te ha asignado la siguiente actividad:</p>
+      <div style="background-color: #ecf0f1; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
+        <h3 style="margin: 0; color: #2c3e50;">{activity_title}</h3>
+        <p style="margin: 10px 0 0 0; color: #555;">{activity_description or ''}</p>
+      </div>
+      <p>Accede a la plataforma para ver todos los detalles:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{FRONTEND_URL}" style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Ir a la Plataforma</a>
+      </div>
+    </div>
+  </body>
+</html>
+"""
+
+        alt.attach(MIMEText(text_part, 'plain'))
+        alt.attach(MIMEText(html_part, 'html'))
+        message.attach(alt)
+
+        # Envío
+        if SMTP_USE_SSL:
+            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10)
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
+            server.quit()
+        else:
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
+            if SMTP_STARTTLS:
+                server.starttls()
+            if SMTP_EMAIL and SMTP_PASSWORD:
+                server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
+            server.quit()
+
+        print(f"[EMAIL SENT] Asignación notificada a: {to_email}, Tarea: {activity_title}")
+        return True
+    except Exception as e:
+        print(f"[EMAIL ERROR] {str(e)}")
+        return False
+
+
 
 def _smtp_send(raw_message: str, recipients: list[str]):
   try:
