@@ -82,7 +82,7 @@ Sistema de Seguimiento de Actividades
             server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
             server.quit()
         else:
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
             if SMTP_STARTTLS:
                 server.starttls()
             if SMTP_EMAIL and SMTP_PASSWORD:
@@ -154,12 +154,12 @@ Sistema de Seguimiento de Actividades
 
         # Envío
         if SMTP_USE_SSL:
-            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10)
+            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=30)
             server.login(SMTP_EMAIL, SMTP_PASSWORD)
             server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
             server.quit()
         else:
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
             if SMTP_STARTTLS:
                 server.starttls()
             if SMTP_EMAIL and SMTP_PASSWORD:
@@ -178,13 +178,13 @@ Sistema de Seguimiento de Actividades
 def _smtp_send(raw_message: str, recipients: list[str]):
   try:
     if SMTP_USE_SSL:
-      server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10)
+      server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=30)
       if SMTP_EMAIL and SMTP_PASSWORD:
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
       server.sendmail(SMTP_EMAIL, recipients, raw_message)
       server.quit()
     else:
-      server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
+      server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
       if SMTP_STARTTLS:
         server.starttls()
       if SMTP_EMAIL and SMTP_PASSWORD:
