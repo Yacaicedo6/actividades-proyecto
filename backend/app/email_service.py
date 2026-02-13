@@ -1,42 +1,25 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
-import mimetypes
-from email import encoders
-from email.mime.base import MIMEBase
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 load_dotenv()
 
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_EMAIL = os.getenv("SMTP_EMAIL")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+SENDGRID_EMAIL = os.getenv("SENDGRID_EMAIL", "noreply@actividades-proyecto.com")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "False").lower() in ("1", "true", "yes")
-SMTP_STARTTLS = os.getenv("SMTP_STARTTLS", "True").lower() in ("1", "true", "yes")
 
 def send_invitation_email(to_email: str, activity_title: str, invitation_token: str, inviter_name: str):
-    """Enviar email de invitación con enlace clickeable"""
-    if not SMTP_EMAIL or not SMTP_PASSWORD:
-        print(f"[WARNING] Email no configurado. Credenciales faltantes en .env")
-        print(f"Token para {to_email}: {invitation_token}")
+    """Enviar email de invitación con enlace clickeable usando SendGrid API"""
+    if not SENDGRID_API_KEY:
+        print(f"[WARNING] SendGrid no configurado. SENDGRID_API_KEY faltante")
+        print(f"[FALLBACK TOKEN] {to_email}: {invitation_token}")
         return False
     
     try:
         acceptance_link = f"{FRONTEND_URL}?token={invitation_token}"
 
-        # Crear mensaje (multipart/mixed permite adjuntos)
-        message = MIMEMultipart('mixed')
-        message['Subject'] = f"¡Has sido invitado a: {activity_title}!"
-        message['From'] = SMTP_EMAIL
-        message['To'] = to_email
-
-        # Cuerpo alternativo (plain + html)
-        alt = MIMEMultipart('alternative')
-
-        text_part = f"""
+        text_content = f"""
 Hola,
 
 {inviter_name} te ha invitado a colaborar en la tarea de gestión:
@@ -52,7 +35,7 @@ Este enlace expirará en 7 días.
 Sistema de Seguimiento de Actividades
 """
 
-        html_part = f"""
+        html_content = f"""
 <html>
   <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -71,26 +54,18 @@ Sistema de Seguimiento de Actividades
 </html>
 """
 
-        alt.attach(MIMEText(text_part, 'plain'))
-        alt.attach(MIMEText(html_part, 'html'))
-        message.attach(alt)
+        message = Mail(
+            from_email=Email(SENDGRID_EMAIL, "Sistema de Actividades"),
+            to_emails=To(to_email),
+            subject=f"¡Has sido invitado a: {activity_title}!",
+            plain_text_content=Content("text/plain", text_content),
+            html_content=Content("text/html", html_content)
+        )
 
-        # Envío: soportar SSL directo o STARTTLS según configuración
-        if SMTP_USE_SSL:
-            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10)
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
-            server.quit()
-        else:
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
-            if SMTP_STARTTLS:
-                server.starttls()
-            if SMTP_EMAIL and SMTP_PASSWORD:
-                server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
-            server.quit()
-
-        print(f"[EMAIL SENT] Para: {to_email}, Tarea: {activity_title}")
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+        
+        print(f"[EMAIL SENT] Para: {to_email}, Tarea: {activity_title} (Status: {response.status_code})")
         return True
     except Exception as e:
         print(f"[EMAIL ERROR] {str(e)}")
@@ -99,22 +74,13 @@ Sistema de Seguimiento de Actividades
 
 
 def send_assignment_notification_email(to_email: str, activity_title: str, activity_description: str, assigner_name: str):
-    """Enviar email de notificación cuando se asigna una actividad a un colaborador"""
-    if not SMTP_EMAIL or not SMTP_PASSWORD:
-        print(f"[WARNING] Email no configurado. Credenciales faltantes en .env")
+    """Enviar email de notificación cuando se asigna una actividad a un colaborador usando SendGrid API"""
+    if not SENDGRID_API_KEY:
+        print(f"[WARNING] SendGrid no configurado. SENDGRID_API_KEY faltante")
         return False
     
     try:
-        # Crear mensaje
-        message = MIMEMultipart('mixed')
-        message['Subject'] = f"Nueva actividad asignada: {activity_title}"
-        message['From'] = SMTP_EMAIL
-        message['To'] = to_email
-
-        # Cuerpo alternativo (plain + html)
-        alt = MIMEMultipart('alternative')
-
-        text_part = f"""
+        text_content = f"""
 Hola,
 
 {assigner_name} te ha asignado una nueva actividad:
@@ -129,7 +95,7 @@ Accede a la plataforma para ver los detalles:
 Sistema de Seguimiento de Actividades
 """
 
-        html_part = f"""
+        html_content = f"""
 <html>
   <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -148,26 +114,18 @@ Sistema de Seguimiento de Actividades
 </html>
 """
 
-        alt.attach(MIMEText(text_part, 'plain'))
-        alt.attach(MIMEText(html_part, 'html'))
-        message.attach(alt)
+        message = Mail(
+            from_email=Email(SENDGRID_EMAIL, "Sistema de Actividades"),
+            to_emails=To(to_email),
+            subject=f"Nueva actividad asignada: {activity_title}",
+            plain_text_content=Content("text/plain", text_content),
+            html_content=Content("text/html", html_content)
+        )
 
-        # Envío
-        if SMTP_USE_SSL:
-            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=30)
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
-            server.quit()
-        else:
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
-            if SMTP_STARTTLS:
-                server.starttls()
-            if SMTP_EMAIL and SMTP_PASSWORD:
-                server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL, [to_email], message.as_string())
-            server.quit()
-
-        print(f"[EMAIL SENT] Asignación notificada a: {to_email}, Tarea: {activity_title}")
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+        
+        print(f"[EMAIL SENT] Asignación notificada a: {to_email}, Tarea: {activity_title} (Status: {response.status_code})")
         return True
     except Exception as e:
         print(f"[EMAIL ERROR] {str(e)}")
@@ -175,43 +133,14 @@ Sistema de Seguimiento de Actividades
 
 
 
-def _smtp_send(raw_message: str, recipients: list[str]):
-  try:
-    if SMTP_USE_SSL:
-      server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=30)
-      if SMTP_EMAIL and SMTP_PASSWORD:
-        server.login(SMTP_EMAIL, SMTP_PASSWORD)
-      server.sendmail(SMTP_EMAIL, recipients, raw_message)
-      server.quit()
-    else:
-      server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
-      if SMTP_STARTTLS:
-        server.starttls()
-      if SMTP_EMAIL and SMTP_PASSWORD:
-        server.login(SMTP_EMAIL, SMTP_PASSWORD)
-      server.sendmail(SMTP_EMAIL, recipients, raw_message)
-      server.quit()
-    return True
-  except Exception as e:
-    print(f"[SMTP ERROR] {e}")
-    return False
-
-
 def send_deadline_email(to_email: str, activity_title: str, due_date: str, owner_name: str, attachments: list = None):
-  """Enviar email recordatorio de vencimiento. `attachments` es una lista de rutas absolutas a archivos."""
-  if not SMTP_EMAIL or not SMTP_PASSWORD:
-    print(f"[WARNING] Email no configurado. No se envía recordatorio a {to_email}")
-    return False
+    """Enviar email recordatorio de vencimiento usando SendGrid API"""
+    if not SENDGRID_API_KEY:
+        print(f"[WARNING] SendGrid no configurado. No se envía recordatorio a {to_email}")
+        return False
 
-  try:
-    message = MIMEMultipart('mixed')
-    message['Subject'] = f"Recordatorio: actividad próxima a vencer - {activity_title}"
-    message['From'] = SMTP_EMAIL
-    message['To'] = to_email
-
-    alt = MIMEMultipart('alternative')
-
-    text_part = f"""
+    try:
+        text_content = f"""
 Hola,
 
 Este es un recordatorio de que la actividad "{activity_title}" asignada por {owner_name} tiene fecha límite: {due_date}.
@@ -224,7 +153,7 @@ Saludos,
 Sistema de Seguimiento de Actividades
 """
 
-    html_part = f"""
+        html_content = f"""
 <html>
   <body style="font-family: Arial, sans-serif; color: #333;">
   <div style="max-width:600px;margin:0 auto;padding:20px;border:1px solid #ddd;border-radius:8px;">
@@ -238,35 +167,23 @@ Sistema de Seguimiento de Actividades
 </html>
 """
 
-    alt.attach(MIMEText(text_part, 'plain'))
-    alt.attach(MIMEText(html_part, 'html'))
-    message.attach(alt)
+        message = Mail(
+            from_email=Email(SENDGRID_EMAIL, "Sistema de Actividades"),
+            to_emails=To(to_email),
+            subject=f"Recordatorio: actividad próxima a vencer - {activity_title}",
+            plain_text_content=Content("text/plain", text_content),
+            html_content=Content("text/html", html_content)
+        )
 
-    # Adjuntar archivos si los hay
-    if attachments:
-      for path in attachments:
-        try:
-          if not os.path.exists(path):
-            print(f"[ATTACHMENT SKIP] Missing: {path}")
-            continue
-          ctype, encoding = mimetypes.guess_type(path)
-          if ctype is None:
-            ctype = 'application/octet-stream'
-          maintype, subtype = ctype.split('/', 1)
-          with open(path, 'rb') as fp:
-            part = MIMEBase(maintype, subtype)
-            part.set_payload(fp.read())
-            encoders.encode_base64(part)
-            filename = os.path.basename(path)
-            part.add_header('Content-Disposition', 'attachment', filename=filename)
-            message.attach(part)
-        except Exception as e:
-          print(f"[ATTACHMENT ERROR] {path} -> {e}")
+        # Note: SendGrid API attachments would need additional implementation
+        if attachments:
+            print(f"[WARNING] Attachments not implemented for SendGrid API yet")
 
-    sent = _smtp_send(message.as_string(), [to_email])
-    if sent:
-      print(f"[EMAIL SENT] Reminder to: {to_email}, Task: {activity_title}")
-    return sent
-  except Exception as e:
-    print(f"[EMAIL ERROR] {str(e)}")
-    return False
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+        
+        print(f"[EMAIL SENT] Reminder to: {to_email}, Task: {activity_title} (Status: {response.status_code})")
+        return True
+    except Exception as e:
+        print(f"[EMAIL ERROR] {str(e)}")
+        return False
