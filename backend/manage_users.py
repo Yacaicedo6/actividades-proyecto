@@ -111,7 +111,7 @@ def delete_user(username):
 
 
 def promote_user(username):
-    """Convertir usuario a CORE"""
+    """Convertir usuario a Admin"""
     with SessionLocal() as db:
         # Verificar si existe
         existing = db.execute(

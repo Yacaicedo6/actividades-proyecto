@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from typing import Optional
 import datetime
 import re
@@ -6,23 +6,23 @@ import re
 class UserCreate(BaseModel):
     username: str
     password: str
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     full_name: Optional[str] = None
     
     @field_validator('username')
     @classmethod
     def validate_username(cls, v):
         if len(v) < 3:
-            raise ValueError('El nombre de usuario debe tener al menos 3 caracteres')
+            raise ValueError('Username debe tener al menos 3 caracteres')
         if not re.match(r'^[a-zA-Z0-9_-]+$', v):
-            raise ValueError('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos')
+            raise ValueError('Username solo puede contener letras, numeros, guiones y guiones bajos')
         return v
     
     @field_validator('password')
     @classmethod
     def validate_password(cls, v):
         if len(v) < 6:
-            raise ValueError('La contraseña debe tener al menos 6 caracteres')
+            raise ValueError('Contraseña debe tener al menos 6 caracteres')
         return v
 
 class UserOut(BaseModel):
@@ -48,6 +48,8 @@ class SubActivityUpdate(BaseModel):
     description: Optional[str] = None
 
 class SubActivityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     activity_id: int
     title: str
@@ -56,9 +58,6 @@ class SubActivityOut(BaseModel):
     order: int
     completed_at: Optional[datetime.datetime]
     timestamp: datetime.datetime
-
-    class Config:
-        from_attributes = True
 
 class ActivityCreate(BaseModel):
     title: str
@@ -73,6 +72,8 @@ class ActivityUpdate(BaseModel):
     due_date: Optional[datetime.datetime] = None
 
 class ActivityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     title: str
     description: Optional[str]
@@ -85,10 +86,7 @@ class ActivityOut(BaseModel):
     updated_at: datetime.datetime
     owner_id: int
     subtasks: list[SubActivityOut] = []
-    files: list[dict] = []
-
-    class Config:
-        from_attributes = True
+    files: list[ActivityFileOut] = []
 
 class ActivityHistoryOut(BaseModel):
     id: int
@@ -103,6 +101,8 @@ class ActivityHistoryOut(BaseModel):
         from_attributes = True
 
 class ActivityFileOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     activity_id: int
     filename: str
@@ -111,9 +111,6 @@ class ActivityFileOut(BaseModel):
     file_type: Optional[str]
     uploaded_by: Optional[str]
     timestamp: datetime.datetime
-
-    class Config:
-        from_attributes = True
 
 class PaginatedActivityOut(BaseModel):
     total: int
