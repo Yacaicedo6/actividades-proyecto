@@ -68,7 +68,7 @@ export default function App(){
     if(token) {
       loadActivities()
       loadCollaborators()
-      loadCurrentUser()  // ✅ Cargar datos del usuario
+      loadCurrentUser()  // Cargar datos del usuario
     }
   },[token, filterStatus, currentPage])
 
@@ -464,18 +464,18 @@ export default function App(){
     <div style={{padding:20}}>
       <h2>Seguimiento de Actividades Gestión de las Artes</h2>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-        <p style={{margin: 0}}>Usuario: <strong>{username}</strong> {currentUser && <span style={{backgroundColor: currentUser.role === 'Admin' ? '#28a745' : '#17a2b8', color: 'white', padding: '2px 8px', borderRadius: 4, fontSize: '0.85em', marginLeft: 8}}>{currentUser.role === 'Admin' ? '👑 ADMIN' : '👤 COLABORADOR'}</span>}</p>
+        <p style={{margin: 0}}>Usuario: <strong>{username}</strong> {currentUser && <span style={{backgroundColor: currentUser.role === 'Admin' ? '#28a745' : '#17a2b8', color: 'white', padding: '2px 8px', borderRadius: 4, fontSize: '0.85em', marginLeft: 8}}>{currentUser.role === 'Admin' ? 'ADMIN' : 'COLABORADOR'}</span>}</p>
         <p style={{margin: 0, fontSize: '0.9em', color: '#666'}}>Colaboradores disponibles: <strong>{collaborators.length}</strong></p>
       </div>
       {collaborators.length === 0 && currentUser?.role === 'Admin' && (
         <div style={{backgroundColor: '#fff3cd', padding: 12, marginBottom: 12, borderLeft: '4px solid #ffc107', borderRadius: 4}}>
-          <strong>ℹ️ Sin colaboradores registrados</strong>
+          <strong>Sin colaboradores registrados</strong>
           <p style={{margin: '8px 0 0 0', fontSize: '0.9em'}}>Los usuarios que se registren aparecerán aquí como colaboradores. Tú eres ADMIN y puedes asignarles actividades.</p>
         </div>
       )}
       {currentUser?.role === 'collaborator' && (
         <div style={{backgroundColor: '#e3f2fd', padding: 12, marginBottom: 12, borderLeft: '4px solid #2196F3', borderRadius: 4}}>
-          <strong>📌 Rol: Colaborador</strong>
+          <strong>Rol: Colaborador</strong>
           <p style={{margin: '8px 0 0 0', fontSize: '0.9em'}}>Puedes crear y gestionar tus actividades. Solo usuarios ADMIN pueden asignarte actividades.</p>
         </div>
       )}
@@ -620,10 +620,10 @@ export default function App(){
                           Prog
                         </button>
                         <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'Done')} style={{background: sub.status === 'Done' ? '#28a745' : '#ddd', color: sub.status === 'Done' ? 'white' : 'black', fontSize: '0.8em', padding: '2px 6px'}}>
-                          ✓
+                          OK
                         </button>
                         <button onClick={() => removeSubtask(a.id, sub.id)} style={{background: '#dc3545', color: 'white', fontSize: '0.8em', padding: '2px 6px'}}>
-                          ✕
+                          X
                         </button>
                       </div>
                     </div>

@@ -46,10 +46,10 @@ def list_users():
         users = result.fetchall()
         
         if not users:
-            print(" No hay usuarios en la base de datos")
+            print("No hay usuarios en la base de datos")
             return
         
-        print("\n📋 USUARIOS EN LA BASE DE DATOS:")
+        print("\nUSUARIOS EN LA BASE DE DATOS:")
         print("=" * 80)
         print(f"{'ID':<5} {'USERNAME':<20} {'EMAIL':<30} {'ROLE':<10}")
         print("=" * 80)
@@ -65,7 +65,7 @@ def create_user(username, email, password, role="Admin"):
         # Verificar si ya existe
         existing = db.execute(text("SELECT id FROM users WHERE username = :username"), {"username": username}).fetchone()
         if existing:
-            print(f"❌ Error: El usuario '{username}' ya existe")
+            print(f"Error: El usuario '{username}' ya existe")
             return False
         
         # Hash de contraseña
@@ -86,7 +86,7 @@ def create_user(username, email, password, role="Admin"):
         )
         db.commit()
         
-        print(f"✅ Usuario creado exitosamente:")
+        print(f"Usuario creado exitosamente:")
         print(f"   Username: {username}")
         print(f"   Email: {email}")
         print(f"   Role: {role}")
@@ -99,14 +99,14 @@ def delete_user(username):
         # Verificar si existe
         existing = db.execute(text("SELECT id FROM users WHERE username = :username"), {"username": username}).fetchone()
         if not existing:
-            print(f"❌ Error: El usuario '{username}' no existe")
+            print(f"Error: El usuario '{username}' no existe")
             return False
         
         # Eliminar usuario
         db.execute(text("DELETE FROM users WHERE username = :username"), {"username": username})
         db.commit()
         
-        print(f"✅ Usuario '{username}' eliminado exitosamente")
+        print(f"Usuario '{username}' eliminado exitosamente")
         return True
 
 
@@ -120,11 +120,11 @@ def promote_user(username):
         ).fetchone()
         
         if not existing:
-            print(f"❌ Error: El usuario '{username}' no existe")
+            print(f"Error: El usuario '{username}' no existe")
             return False
         
         if existing[1] == "Admin":
-            print(f"⚠️ El usuario '{username}' ya es Admin")
+            print(f"AVISO: El usuario '{username}' ya es Admin")
             return True
         
         # Actualizar a Admin
@@ -134,7 +134,7 @@ def promote_user(username):
         )
         db.commit()
         
-        print(f"✅ Usuario '{username}' promovido a Admin exitosamente")
+        print(f"Usuario '{username}' promovido a Admin exitosamente")
         return True
 
 

@@ -47,7 +47,7 @@ Sistema de Seguimiento de Actividades
       </div>
       <p>Para aceptar la invitación y acceder a la tarea, haz clic en el botón:</p>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="{acceptance_link}" style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">✓ Aceptar Invitación</a>
+        <a href="{acceptance_link}" style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Aceptar Invitación</a>
       </div>
       <p style="color: #7f8c8d; font-size: 0.9em;">Este enlace expirará en 7 días.</p>
     </div>
