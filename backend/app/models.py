@@ -9,7 +9,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=True)
     full_name = Column(String, nullable=True)
-    role = Column(String, default="collaborator", index=True)  # core | collaborator
+    role = Column(String, default="collaborator", index=True)  # Admin | collaborator
     hashed_password = Column(String, nullable=False)
     activities = relationship("Activity", back_populates="owner")
     shared_activities = relationship("ActivityAccess", back_populates="user")

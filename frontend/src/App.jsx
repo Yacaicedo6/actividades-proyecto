@@ -464,19 +464,19 @@ export default function App(){
     <div style={{padding:20}}>
       <h2>Seguimiento de Actividades Gestión de las Artes</h2>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-        <p style={{margin: 0}}>Usuario: <strong>{username}</strong> {currentUser && <span style={{backgroundColor: currentUser.role === 'core' ? '#28a745' : '#17a2b8', color: 'white', padding: '2px 8px', borderRadius: 4, fontSize: '0.85em', marginLeft: 8}}>{currentUser.role === 'core' ? '👑 CORE' : '👤 COLABORADOR'}</span>}</p>
+        <p style={{margin: 0}}>Usuario: <strong>{username}</strong> {currentUser && <span style={{backgroundColor: currentUser.role === 'Admin' ? '#28a745' : '#17a2b8', color: 'white', padding: '2px 8px', borderRadius: 4, fontSize: '0.85em', marginLeft: 8}}>{currentUser.role === 'Admin' ? '👑 ADMIN' : '👤 COLABORADOR'}</span>}</p>
         <p style={{margin: 0, fontSize: '0.9em', color: '#666'}}>Colaboradores disponibles: <strong>{collaborators.length}</strong></p>
       </div>
-      {collaborators.length === 0 && currentUser?.role === 'core' && (
+      {collaborators.length === 0 && currentUser?.role === 'Admin' && (
         <div style={{backgroundColor: '#fff3cd', padding: 12, marginBottom: 12, borderLeft: '4px solid #ffc107', borderRadius: 4}}>
           <strong>ℹ️ Sin colaboradores registrados</strong>
-          <p style={{margin: '8px 0 0 0', fontSize: '0.9em'}}>Los usuarios que se registren aparecerán aquí como colaboradores. Tú eres CORE y puedes asignarles actividades.</p>
+          <p style={{margin: '8px 0 0 0', fontSize: '0.9em'}}>Los usuarios que se registren aparecerán aquí como colaboradores. Tú eres ADMIN y puedes asignarles actividades.</p>
         </div>
       )}
       {currentUser?.role === 'collaborator' && (
         <div style={{backgroundColor: '#e3f2fd', padding: 12, marginBottom: 12, borderLeft: '4px solid #2196F3', borderRadius: 4}}>
           <strong>📌 Rol: Colaborador</strong>
-          <p style={{margin: '8px 0 0 0', fontSize: '0.9em'}}>Puedes crear y gestionar tus actividades. Solo usuarios CORE pueden asignarte actividades.</p>
+          <p style={{margin: '8px 0 0 0', fontSize: '0.9em'}}>Puedes crear y gestionar tus actividades. Solo usuarios ADMIN pueden asignarte actividades.</p>
         </div>
       )}
       <div style={{border:'1px solid #ccc', padding: 10, marginBottom: 20}}>
@@ -592,10 +592,10 @@ export default function App(){
                 <button onClick={() => changeStatus(a.id, 'Completada')} style={{background: a.status === 'Completada' ? '#28a745' : '#ccc', color: 'white', marginRight: 4}}>Completada</button>
                 <button onClick={() => changeStatus(a.id, 'Cancelada')} style={{background: a.status === 'Cancelada' ? '#dc3545' : '#ccc', color: 'white', marginRight: 4}}>Cancelada</button>
                 <button onClick={() => setShowCollaboratorAssign(a.id)} style={{marginRight: 4, background: '#17a2b8', color: 'white'}}>Asignar Colaborador</button>
-                {currentUser?.role === 'core' && (
+                {currentUser?.role === 'Admin' && (
                   <button onClick={() => changeDueDate(a.id, a.due_date)} style={{marginRight: 4}}>Plazo</button>
                 )}
-                {currentUser?.role === 'core' && (
+                {currentUser?.role === 'Admin' && (
                   <button onClick={() => removeActivity(a.id)} style={{marginRight: 4, background: '#dc3545', color: 'white'}}>Eliminar</button>
                 )}
                 <button onClick={() => toggleSubtasks(a.id)} style={{marginRight: 4, background: expandedActivity === a.id ? '#17a2b8' : '#6c757d', color: 'white'}}>

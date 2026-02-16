@@ -10,7 +10,7 @@ def get_user_by_username(db: Session, username: str):
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed = get_password_hash(user.password)
-    role = "core" if db.query(models.User).count() == 0 else "collaborator"
+    role = "Admin" if db.query(models.User).count() == 0 else "collaborator"
     email = user.email or user.username
     db_user = models.User(
         username=user.username,
@@ -59,7 +59,7 @@ def has_activity_access(db: Session, activity_id: int, user_id: int):
 
 def _activity_scope_query(db: Session, current_user: models.User):
     query = db.query(models.Activity)
-    if current_user.role != "core":
+    if current_user.role != "Admin":
         query = query.outerjoin(
             models.ActivityAccess,
             models.ActivityAccess.activity_id == models.Activity.id
@@ -504,7 +504,7 @@ def assign_activity_to_collaborator(db: Session, activity_id: int, owner_id: int
     return activity, collaborator, inv
 
 def create_core_user(db: Session, current_user: models.User, payload: schemas.CoreUserCreate):
-    if current_user.role != "core":
+    if current_user.role != "Admin":
         return None
     existing = get_user_by_username(db, payload.username)
     if existing:
@@ -513,7 +513,7 @@ def create_core_user(db: Session, current_user: models.User, payload: schemas.Co
         username=payload.username,
         email=payload.email or payload.username,
         full_name=payload.full_name or payload.username,
-        role="core",
+        role="Admin",
         hashed_password=get_password_hash(payload.password)
     )
     db.add(user)

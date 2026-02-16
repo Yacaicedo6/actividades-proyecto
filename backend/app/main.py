@@ -105,8 +105,8 @@ def update_activity(activity_id: int, activity_update: schemas.ActivityUpdate, c
 
 @app.delete('/activities/{activity_id}')
 def delete_activity(activity_id: int, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    if current_user.role != "core":
-        raise HTTPException(status_code=403, detail='Solo usuarios core pueden eliminar actividades')
+    if current_user.role != "Admin":
+        raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden eliminar actividades')
     result = crud.delete_activity(db, activity_id)
     if not result:
         raise HTTPException(status_code=404, detail='Activity not found')
@@ -265,8 +265,8 @@ def delete_subtask(activity_id: int, subtask_id: int, current_user: models.User 
 
 @app.get('/dashboard/weekly')
 def get_weekly_dashboard(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    if current_user.role != "core":
-        raise HTTPException(status_code=403, detail="Dashboard solo disponible para usuarios core")
+    if current_user.role != "Admin":
+        raise HTTPException(status_code=403, detail="Dashboard solo disponible para usuarios Admin")
     return crud.get_weekly_dashboard(db, current_user)
 
 
@@ -363,14 +363,14 @@ def create_invitation(activity_id: int, invite: schemas.InvitationCreate, curren
 
 @app.get('/collaborators', response_model=list[schemas.CollaboratorOut])
 def list_collaborators(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    if current_user.role != "core":
-        raise HTTPException(status_code=403, detail='Solo usuarios core pueden asignar colaboradores')
+    if current_user.role != "Admin":
+        raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden asignar colaboradores')
     return crud.list_collaborators(db, current_user.id)
 
 @app.post('/activities/{activity_id}/assign', response_model=schemas.ActivityOut)
 def assign_activity(activity_id: int, body: schemas.AssignActivityRequest, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    if current_user.role != "core":
-        raise HTTPException(status_code=403, detail='Solo usuarios core pueden asignar actividades')
+    if current_user.role != "Admin":
+        raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden asignar actividades')
     activity, collaborator, invitation = crud.assign_activity_to_collaborator(
         db, activity_id, current_user.id, body.collaborator_id, current_user.username
     )
@@ -460,5 +460,5 @@ def get_me(current_user: models.User = Depends(auth.get_current_user)):
 def create_core_user(payload: schemas.CoreUserCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     user = crud.create_core_user(db, current_user, payload)
     if not user:
-        raise HTTPException(status_code=403, detail='Solo usuarios core pueden crear usuarios core')
+        raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden crear usuarios Admin')
     return user
