@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createCoreUser, getCurrentUser } from './api'
+import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser } from './api'
 
 export default function App(){
   const [token, setToken] = useState(null)

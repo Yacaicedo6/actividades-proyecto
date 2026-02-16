@@ -151,7 +151,7 @@ class CollaboratorOut(BaseModel):
 class AssignActivityRequest(BaseModel):
     collaborator_id: int
 
-class CoreUserCreate(BaseModel):
+class AdminUserCreate(BaseModel):
     username: str
     password: str
     email: Optional[str] = None

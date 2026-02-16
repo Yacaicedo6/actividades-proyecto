@@ -258,8 +258,8 @@ export async function assignActivityToCollaborator(token, activityId, collaborat
   return await res.json()
 }
 
-export async function createCoreUser(token, username, password, email, fullName){
-  const res = await fetch(`${API_BASE}/admin/core-users`, {
+export async function createAdminUser(token, username, password, email, fullName){
+  const res = await fetch(`${API_BASE}/admin/admin-users`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
@@ -272,6 +272,6 @@ export async function createCoreUser(token, username, password, email, fullName)
       full_name: fullName 
     })
   })
-  if(!res.ok) throw new Error('Failed to create core user')
+  if(!res.ok) throw new Error('Failed to create admin user')
   return await res.json()
 }

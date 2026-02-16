@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 from . import models, schemas, crud, auth
@@ -10,17 +10,11 @@ from .email_service import send_invitation_email, send_deadline_email, send_assi
 import csv
 import io
 import os
-from fastapi import UploadFile, File
-from fastapi.responses import FileResponse
 from pathlib import Path
 import sqlalchemy
 from datetime import datetime
 
-try:
-    Base.metadata.create_all(bind=engine)
-except sqlalchemy.exc.OperationalError as e:
-    # Evitar que errores de DDL durante recarga (uvicorn --reload) detengan la app
-    print(f"Warning creating tables: {e}")
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Seguimiento de Actividades - Prototipo")
 
@@ -456,9 +450,9 @@ def accept_invitation_login(token: str, payload: schemas.InvitationAccept, db: S
 def get_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
 
-@app.post('/admin/core-users', response_model=schemas.UserOut)
-def create_core_user(payload: schemas.CoreUserCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    user = crud.create_core_user(db, current_user, payload)
+@app.post('/admin/admin-users', response_model=schemas.UserOut)
+def create_admin_user(payload: schemas.AdminUserCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    user = crud.create_admin_user(db, current_user, payload)
     if not user:
         raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden crear usuarios Admin')
     return user

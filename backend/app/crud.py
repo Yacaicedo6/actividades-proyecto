@@ -503,7 +503,7 @@ def assign_activity_to_collaborator(db: Session, activity_id: int, owner_id: int
     db.refresh(activity)
     return activity, collaborator, inv
 
-def create_core_user(db: Session, current_user: models.User, payload: schemas.CoreUserCreate):
+def create_admin_user(db: Session, current_user: models.User, payload: schemas.AdminUserCreate):
     if current_user.role != "Admin":
         return None
     existing = get_user_by_username(db, payload.username)
