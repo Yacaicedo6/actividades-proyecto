@@ -49,8 +49,17 @@ def has_activity_access(db: Session, activity_id: int, user_id: int):
     act = db.query(models.Activity).filter(models.Activity.id == activity_id).first()
     if not act:
         return False
+    
+    # Verificar si el usuario es Admin
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user and user.role == "Admin":
+        return True
+    
+    # Verificar si es el dueño
     if act.owner_id == user_id:
         return True
+    
+    # Verificar si tiene acceso compartido
     shared = db.query(models.ActivityAccess).filter(
         models.ActivityAccess.activity_id == activity_id,
         models.ActivityAccess.user_id == user_id
@@ -397,10 +406,11 @@ def create_invitation(db: Session, activity_id: int, owner_id: int, invited_emai
     import secrets
     import datetime as dt
     
-    db_act = db.query(models.Activity).filter(
-        models.Activity.id == activity_id,
-        models.Activity.owner_id == owner_id
-    ).first()
+    # Verificar que la actividad existe y el usuario tiene acceso
+    if not has_activity_access(db, activity_id, owner_id):
+        return None
+    
+    db_act = db.query(models.Activity).filter(models.Activity.id == activity_id).first()
     if not db_act:
         return None
     
