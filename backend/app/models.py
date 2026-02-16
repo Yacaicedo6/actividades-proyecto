@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
@@ -72,7 +72,7 @@ class Webhook(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
     url = Column(String, nullable=False)
     event = Column(String, default="*")  # '*' for all, 'status_changed', 'activity_created', etc.
-    active = Column(String, default=True)
+    active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class ActivityFile(Base):

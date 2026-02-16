@@ -1,12 +1,29 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 import datetime
+import re
 
 class UserCreate(BaseModel):
     username: str
     password: str
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+    
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v):
+        if len(v) < 3:
+            raise ValueError('El nombre de usuario debe tener al menos 3 caracteres')
+        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+            raise ValueError('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos')
+        return v
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('La contraseña debe tener al menos 6 caracteres')
+        return v
 
 class UserOut(BaseModel):
     id: int

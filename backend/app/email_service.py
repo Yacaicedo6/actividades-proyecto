@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
+from .logging_config import logger
 
 load_dotenv()
 
@@ -12,8 +13,8 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 def send_invitation_email(to_email: str, activity_title: str, invitation_token: str, inviter_name: str):
     """Enviar email de invitación con enlace clickeable usando SendGrid API"""
     if not SENDGRID_API_KEY:
-        print(f"[WARNING] SendGrid no configurado. SENDGRID_API_KEY faltante")
-        print(f"[FALLBACK TOKEN] {to_email}: {invitation_token}")
+        logger.warning("SendGrid no configurado. SENDGRID_API_KEY faltante")
+        logger.info(f"FALLBACK TOKEN para {to_email}: {invitation_token}")
         return False
     
     try:
@@ -65,18 +66,18 @@ Sistema de Seguimiento de Actividades
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
         
-        print(f"[EMAIL SENT] Para: {to_email}, Tarea: {activity_title} (Status: {response.status_code})")
+        logger.info(f"Email enviado a {to_email} para tarea '{activity_title}' (Status: {response.status_code})")
         return True
     except Exception as e:
-        print(f"[EMAIL ERROR] {str(e)}")
-        print(f"[FALLBACK TOKEN] {to_email}: {invitation_token}")
+        logger.error(f"Error al enviar email: {str(e)}", exc_info=True)
+        logger.info(f"FALLBACK TOKEN para {to_email}: {invitation_token}")
         return False
 
 
 def send_assignment_notification_email(to_email: str, activity_title: str, activity_description: str, assigner_name: str):
     """Enviar email de notificación cuando se asigna una actividad a un colaborador usando SendGrid API"""
     if not SENDGRID_API_KEY:
-        print(f"[WARNING] SendGrid no configurado. SENDGRID_API_KEY faltante")
+        logger.warning("SendGrid no configurado. SENDGRID_API_KEY faltante")
         return False
     
     try:
@@ -125,10 +126,10 @@ Sistema de Seguimiento de Actividades
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
         
-        print(f"[EMAIL SENT] Asignación notificada a: {to_email}, Tarea: {activity_title} (Status: {response.status_code})")
+        logger.info(f"Notificación de asignación enviada a {to_email} para '{activity_title}' (Status: {response.status_code})")
         return True
     except Exception as e:
-        print(f"[EMAIL ERROR] {str(e)}")
+        logger.error(f"Error al enviar notificación de asignación: {str(e)}", exc_info=True)
         return False
 
 
@@ -136,7 +137,7 @@ Sistema de Seguimiento de Actividades
 def send_deadline_email(to_email: str, activity_title: str, due_date: str, owner_name: str, attachments: list = None):
     """Enviar email recordatorio de vencimiento usando SendGrid API"""
     if not SENDGRID_API_KEY:
-        print(f"[WARNING] SendGrid no configurado. No se envía recordatorio a {to_email}")
+        logger.warning(f"SendGrid no configurado. No se envía recordatorio a {to_email}")
         return False
 
     try:
@@ -177,13 +178,13 @@ Sistema de Seguimiento de Actividades
 
         # Note: SendGrid API attachments would need additional implementation
         if attachments:
-            print(f"[WARNING] Attachments not implemented for SendGrid API yet")
+            logger.warning("Adjuntos no implementados aún para SendGrid API")
 
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
         
-        print(f"[EMAIL SENT] Reminder to: {to_email}, Task: {activity_title} (Status: {response.status_code})")
+        logger.info(f"Recordatorio enviado a {to_email} para '{activity_title}' (Status: {response.status_code})")
         return True
     except Exception as e:
-        print(f"[EMAIL ERROR] {str(e)}")
+        logger.error(f"Error al enviar recordatorio: {str(e)}", exc_info=True)
         return False
