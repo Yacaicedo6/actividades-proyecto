@@ -213,10 +213,14 @@ def delete_webhook(db: Session, webhook_id: int, owner_id: int):
     return db_webhook
 
 def get_webhooks_for_event(db: Session, owner_id: int, event: str):
+    from sqlalchemy import or_, cast, Boolean
     return db.query(models.Webhook).filter(
         models.Webhook.owner_id == owner_id,
-        models.Webhook.active == True,
-        (models.Webhook.event == "*") | (models.Webhook.event == event)
+        or_(
+            models.Webhook.active == True,
+            models.Webhook.active.in_(['true', '1', 'True'])
+        ),
+        or_(models.Webhook.event == "*", models.Webhook.event == event)
     ).all()
 
 def send_webhooks(db: Session, owner_id: int, event: str, activity_data: dict):
