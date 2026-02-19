@@ -373,21 +373,25 @@ def get_weekly_dashboard(db: Session, current_user: models.User):
         models.Activity.timestamp >= dt.datetime(week_ago.year, week_ago.month, week_ago.day)
     ).count()
     
-    # 'new' es un estado que no se usa actualmente en BD, devolvemos 0
-    new_count = 0
+    cancelled_count = base_query.filter(
+        models.Activity.status == 'Cancelada',
+        models.Activity.timestamp >= dt.datetime(week_ago.year, week_ago.month, week_ago.day)
+    ).count()
     
-    total = new_count + in_progress_count + done_count
+    total = in_progress_count + done_count + cancelled_count
     
     return {
         'period': f'Últimos 7 días (desde {week_ago})',
-        'new': new_count,
         'in_progress': in_progress_count,
         'done': done_count,
+        'cancelled': cancelled_count,
         'total': total,
         'percentages': {
-            'new': round((new_count / total * 100) if total > 0 else 0, 1),
             'in_progress': round((in_progress_count / total * 100) if total > 0 else 0, 1),
-            'done': round((done_count / total * 100) if total > 0 else 0, 1)
+            'done': round((done_count / total * 100) if total > 0 else 0, 1),
+            'cancelled': round((cancelled_count / total * 100) if total > 0 else 0, 1)
+        }
+    }
         }
     }
 

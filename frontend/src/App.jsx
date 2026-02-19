@@ -465,8 +465,27 @@ export default function App(){
       <h2>Seguimiento de Actividades Gestión de las Artes</h2>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
         <p style={{margin: 0}}>Usuario: <strong>{username}</strong> {currentUser && <span style={{backgroundColor: currentUser.role === 'Admin' ? '#28a745' : '#17a2b8', color: 'white', padding: '2px 8px', borderRadius: 4, fontSize: '0.85em', marginLeft: 8}}>{currentUser.role === 'Admin' ? 'ADMIN' : 'COLABORADOR'}</span>}</p>
-        <p style={{margin: 0, fontSize: '0.9em', color: '#666'}}>Colaboradores disponibles: <strong>{collaborators.length}</strong></p>
       </div>
+      
+      {currentUser?.role === 'Admin' && (
+        <div style={{backgroundColor: '#f0f8ff', border: '2px solid #17a2b8', padding: 15, marginBottom: 15, borderRadius: '8px'}}>
+          <h3 style={{margin: '0 0 10px 0'}}>Colaboradores Disponibles ({collaborators.length})</h3>
+          {collaborators.length === 0 ? (
+            <p style={{color: '#666', fontSize: '0.9em', margin: 0}}>Sin colaboradores registrados. Los usuarios que se registren aparecerán aquí.</p>
+          ) : (
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10}}>
+              {collaborators.map(colab => (
+                <div key={colab.id} style={{backgroundColor: 'white', border: '1px solid #ddd', padding: 10, borderRadius: '6px'}}>
+                  <p style={{margin: '0 0 5px 0', fontWeight: 'bold', color: '#333'}}>{colab.username}</p>
+                  <p style={{margin: '0 0 5px 0', fontSize: '0.85em', color: '#666', wordBreak: 'break-all'}}>{colab.email || 'Sin email'}</p>
+                  <span style={{backgroundColor: '#17a2b8', color: 'white', padding: '2px 6px', borderRadius: 3, fontSize: '0.8em'}}>COLABORADOR</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      
       {collaborators.length === 0 && currentUser?.role === 'Admin' && (
         <div style={{backgroundColor: '#fff3cd', padding: 12, marginBottom: 12, borderLeft: '4px solid #ffc107', borderRadius: 4}}>
           <strong>Sin colaboradores registrados</strong>
@@ -494,23 +513,23 @@ export default function App(){
       <hr/>
       {weeklyDashboard && (
         <div style={{border: '2px solid #17a2b8', padding: 15, marginBottom: 20, backgroundColor: '#f0f8ff', borderRadius: '8px'}}>
-          <h3> Dashboard Semáforo - Últimos 7 días</h3>
+          <h3>Dashboard Semáforo - Últimos 7 días</h3>
           <p style={{fontSize: '0.9em', color: '#666'}}>{weeklyDashboard.period}</p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 15, marginTop: 12}}>
-            <div style={{textAlign: 'center', padding: 15, backgroundColor: '#ffebee', borderRadius: '6px', border: '2px solid #ef5350'}}>
-              <div style={{fontSize: '2em', fontWeight: 'bold', color: '#d32f2f'}}>{weeklyDashboard.new}</div>
-              <div style={{fontSize: '0.9em', color: '#c62828'}}>Por iniciar</div>
-              <div style={{fontSize: '0.85em', color: '#666', marginTop: 4}}>{weeklyDashboard.percentages.new}%</div>
-            </div>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 15, marginTop: 12}}>
             <div style={{textAlign: 'center', padding: 15, backgroundColor: '#fff3e0', borderRadius: '6px', border: '2px solid #ffb74d'}}>
               <div style={{fontSize: '2em', fontWeight: 'bold', color: '#f57f17'}}>{weeklyDashboard.in_progress}</div>
-              <div style={{fontSize: '0.9em', color: '#e65100'}}>En progreso</div>
+              <div style={{fontSize: '0.9em', color: '#e65100'}}>En Curso</div>
               <div style={{fontSize: '0.85em', color: '#666', marginTop: 4}}>{weeklyDashboard.percentages.in_progress}%</div>
             </div>
             <div style={{textAlign: 'center', padding: 15, backgroundColor: '#e8f5e9', borderRadius: '6px', border: '2px solid #66bb6a'}}>
               <div style={{fontSize: '2em', fontWeight: 'bold', color: '#388e3c'}}>{weeklyDashboard.done}</div>
               <div style={{fontSize: '0.9em', color: '#1b5e20'}}>Completadas</div>
               <div style={{fontSize: '0.85em', color: '#666', marginTop: 4}}>{weeklyDashboard.percentages.done}%</div>
+            </div>
+            <div style={{textAlign: 'center', padding: 15, backgroundColor: '#f3e5f5', borderRadius: '6px', border: '2px solid #ba68c8'}}>
+              <div style={{fontSize: '2em', fontWeight: 'bold', color: '#7b1fa2'}}>{weeklyDashboard.cancelled}</div>
+              <div style={{fontSize: '0.9em', color: '#6a1b9a'}}>Canceladas</div>
+              <div style={{fontSize: '0.85em', color: '#666', marginTop: 4}}>{weeklyDashboard.percentages.cancelled}%</div>
             </div>
           </div>
           <div style={{marginTop: 12, textAlign: 'center', fontSize: '0.9em', color: '#666'}}>
@@ -613,17 +632,17 @@ export default function App(){
                         {sub.description && <div style={{fontSize: '0.85em', color: '#666'}}>{sub.description}</div>}
                       </div>
                       <div style={{display: 'flex', gap: 4}}>
-                        <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'New')} style={{background: sub.status === 'New' ? '#007bff' : '#ddd', color: sub.status === 'New' ? 'white' : 'black', fontSize: '0.8em', padding: '2px 6px'}}>
-                          New
+                        <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'En Curso')} style={{background: sub.status === 'En Curso' ? '#ffc107' : '#ddd', color: sub.status === 'En Curso' ? 'black' : '#666', fontSize: '0.8em', padding: '4px 8px', borderRadius: '3px', border: 'none', cursor: 'pointer', fontWeight: sub.status === 'En Curso' ? 'bold' : 'normal'}}>
+                          En Curso
                         </button>
-                        <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'In Progress')} style={{background: sub.status === 'In Progress' ? '#ffc107' : '#ddd', color: sub.status === 'In Progress' ? 'white' : 'black', fontSize: '0.8em', padding: '2px 6px'}}>
-                          Prog
+                        <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'Completada')} style={{background: sub.status === 'Completada' ? '#28a745' : '#ddd', color: sub.status === 'Completada' ? 'white' : '#666', fontSize: '0.8em', padding: '4px 8px', borderRadius: '3px', border: 'none', cursor: 'pointer', fontWeight: sub.status === 'Completada' ? 'bold' : 'normal'}}>
+                          Completada
                         </button>
-                        <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'Done')} style={{background: sub.status === 'Done' ? '#28a745' : '#ddd', color: sub.status === 'Done' ? 'white' : 'black', fontSize: '0.8em', padding: '2px 6px'}}>
-                          OK
+                        <button onClick={() => changeSubtaskStatus(a.id, sub.id, 'Cancelada')} style={{background: sub.status === 'Cancelada' ? '#6c757d' : '#ddd', color: sub.status === 'Cancelada' ? 'white' : '#666', fontSize: '0.8em', padding: '4px 8px', borderRadius: '3px', border: 'none', cursor: 'pointer', fontWeight: sub.status === 'Cancelada' ? 'bold' : 'normal'}}>
+                          Cancelada
                         </button>
-                        <button onClick={() => removeSubtask(a.id, sub.id)} style={{background: '#dc3545', color: 'white', fontSize: '0.8em', padding: '2px 6px'}}>
-                          X
+                        <button onClick={() => removeSubtask(a.id, sub.id)} style={{background: '#dc3545', color: 'white', fontSize: '0.8em', padding: '4px 8px', borderRadius: '3px', border: 'none', cursor: 'pointer'}}>
+                          Eliminar
                         </button>
                       </div>
                     </div>
