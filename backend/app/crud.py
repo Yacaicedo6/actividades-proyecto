@@ -195,6 +195,13 @@ def get_activities_for_export(db: Session, current_user: models.User, status: st
         query = query.filter(models.Activity.status == status)
     return query.order_by(models.Activity.timestamp.desc()).all()
 
+def get_activities_for_week(db: Session, current_user: models.User, days: int = 7):
+    from datetime import datetime, timedelta
+    start_date = datetime.utcnow() - timedelta(days=days)
+    query = _activity_scope_query(db, current_user)
+    query = query.filter(models.Activity.timestamp >= start_date)
+    return query.order_by(models.Activity.timestamp.desc()).all()
+
 def create_webhook(db: Session, owner_id: int, webhook: schemas.WebhookCreate):
     db_webhook = models.Webhook(owner_id=owner_id, url=webhook.url, event=webhook.event)
     db.add(db_webhook)

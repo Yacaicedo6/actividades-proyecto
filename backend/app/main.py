@@ -85,6 +85,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         if not user:
             logger.warning(f"Login failed: invalid credentials for {form_data.username}")
             raise HTTPException(status_code=400, detail='Incorrect username or password')
+        user.last_login = datetime.utcnow()
+        db.commit()
         access_token = auth.create_access_token(data={"sub": user.username})
         logger.info(f"Login successful for {user.username}")
         return {"access_token": access_token, "token_type": "bearer"}
@@ -188,6 +190,37 @@ def export_activities_csv(
         iter([output.getvalue()]),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=actividades.csv"}
+    )
+
+@app.get('/activities/export/weekly')
+def export_weekly_activities_csv(
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+    days: int = 7
+):
+    activities = crud.get_activities_for_week(db, current_user, days=days)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Título', 'Descripción', 'Estado', 'Asignado a', 'Inyectado por', 'Creado', 'Actualizado'])
+
+    for act in activities:
+        writer.writerow([
+            act.id,
+            act.title,
+            act.description or '',
+            act.status,
+            act.assigned_to or '',
+            act.injected_by or '',
+            act.timestamp.isoformat() if act.timestamp else '',
+            act.updated_at.isoformat() if act.updated_at else ''
+        ])
+
+    output.seek(0)
+    filename = f"actividades_semana_{datetime.utcnow().date().isoformat()}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 @app.post('/webhooks', response_model=schemas.WebhookOut)

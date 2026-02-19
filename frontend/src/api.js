@@ -119,6 +119,25 @@ export async function exportActivityCSV(token, status = null){
   document.body.removeChild(a)
 }
 
+export async function exportWeeklyCSV(token, days = 7){
+  const params = new URLSearchParams()
+  params.append('days', String(days))
+  const url = `${API_BASE}/activities/export/weekly?${params}`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if(!res.ok) throw new Error('Weekly export failed')
+  const blob = await res.blob()
+  const downloadUrl = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = downloadUrl
+  a.download = 'actividades_semana.csv'
+  document.body.appendChild(a)
+  a.click()
+  window.URL.revokeObjectURL(downloadUrl)
+  document.body.removeChild(a)
+}
+
 export async function createWebhook(token, url, event = '*'){
   const res = await fetch(`${API_BASE}/webhooks`, {
     method:'POST', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },

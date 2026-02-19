@@ -31,6 +31,8 @@ class UserOut(BaseModel):
     email: Optional[str]
     full_name: Optional[str]
     role: str
+    last_login: Optional[datetime.datetime] = None
+    created_at: Optional[datetime.datetime] = None
 
     class Config:
         from_attributes = True
@@ -158,6 +160,8 @@ class CollaboratorOut(BaseModel):
     username: str
     email: Optional[str]
     full_name: Optional[str]
+    last_login: Optional[datetime.datetime] = None
+    created_at: Optional[datetime.datetime] = None
 
     class Config:
         from_attributes = True

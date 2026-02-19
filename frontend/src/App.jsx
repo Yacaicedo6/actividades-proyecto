@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser, updateUserRole, deleteUser } from './api'
+import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, exportWeeklyCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser, updateUserRole, deleteUser } from './api'
 
 export default function App(){
   const [token, setToken] = useState(null)
@@ -236,6 +236,14 @@ export default function App(){
       await exportActivityCSV(token, filterStatus)
     }catch(err){
       alert('Error al exportar: ' + err.message)
+    }
+  }
+
+  async function doExportWeekly(){
+    try{
+      await exportWeeklyCSV(token, 7)
+    }catch(err){
+      alert('Error al exportar semana: ' + err.message)
     }
   }
 
@@ -585,6 +593,7 @@ export default function App(){
           <option value="Cancelada">Cancelada</option>
         </select>
         <button onClick={doExport}>Exportar CSV</button>
+        <button onClick={doExportWeekly}>Exportar semana</button>
         <button onClick={()=>{setShowWebhookSettings(!showWebhookSettings); if(!showWebhookSettings) loadWebhooks()}}>
           {showWebhookSettings ? 'Ocultar' : 'Mostrar'} Webhooks
         </button>
