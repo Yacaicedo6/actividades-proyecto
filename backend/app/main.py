@@ -13,6 +13,11 @@ import os
 from pathlib import Path
 import sqlalchemy
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,6 +28,7 @@ origins = [
     "http://127.0.0.1:5173",
     "http://localhost:5173",
     "https://yacaicedo6.github.io",
+    "https://yacaicedo6.github.io/actividades-proyecto/",
     "https://yacaicedo6.github.io/actividades-proyecto",
 ]
 app.add_middleware(
@@ -35,15 +41,21 @@ app.add_middleware(
 
 @app.post('/register', response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    logger.info(f"Register attempt: username={user.username}")
     existing = crud.get_user_by_username(db, user.username)
     if existing:
+        logger.warning(f"Register failed: username already exists - {user.username}")
         raise HTTPException(status_code=400, detail='Username already registered')
-    return crud.create_user(db, user)
+    new_user = crud.create_user(db, user)
+    logger.info(f"User registered successfully: {user.username}")
+    return new_user
 
 @app.post('/token', response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    logger.info(f"Login attempt: username={form_data.username}")
     user = crud.authenticate_user(db, form_data.username, form_data.password)
     if not user:
+        logger.warning(f"Login failed: invalid credentials for {form_data.username}")
         raise HTTPException(status_code=400, detail='Incorrect username or password')
     # Registrar último login
     import datetime
