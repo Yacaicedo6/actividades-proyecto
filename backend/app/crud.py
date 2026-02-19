@@ -392,8 +392,6 @@ def get_weekly_dashboard(db: Session, current_user: models.User):
             'cancelled': round((cancelled_count / total * 100) if total > 0 else 0, 1)
         }
     }
-        }
-    }
 
 def get_due_activities(db: Session, current_user: models.User, within_hours: int = 24):
     """Return activities with due_date within the next `within_hours` hours and not Done."""
