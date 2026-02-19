@@ -85,10 +85,6 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         if not user:
             logger.warning(f"Login failed: invalid credentials for {form_data.username}")
             raise HTTPException(status_code=400, detail='Incorrect username or password')
-        # Registrar último login
-        import datetime
-        user.last_login = datetime.datetime.utcnow()
-        db.commit()
         access_token = auth.create_access_token(data={"sub": user.username})
         logger.info(f"Login successful for {user.username}")
         return {"access_token": access_token, "token_type": "bearer"}
