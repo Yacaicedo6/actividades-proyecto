@@ -358,20 +358,19 @@ def get_weekly_dashboard(db: Session, current_user: models.User):
     base_query = _activity_scope_query(db, current_user)
     
     # Count activities by status created in last 7 days
-    new_count = base_query.filter(
-        models.Activity.status == 'New',
-        models.Activity.timestamp >= dt.datetime(week_ago.year, week_ago.month, week_ago.day)
-    ).count()
-    
+    # Estados en BD español: 'En Curso', 'Completada', 'Cancelada'
     in_progress_count = base_query.filter(
-        models.Activity.status == 'In Progress',
+        models.Activity.status == 'En Curso',
         models.Activity.timestamp >= dt.datetime(week_ago.year, week_ago.month, week_ago.day)
     ).count()
     
     done_count = base_query.filter(
-        models.Activity.status == 'Done',
+        models.Activity.status == 'Completada',
         models.Activity.timestamp >= dt.datetime(week_ago.year, week_ago.month, week_ago.day)
     ).count()
+    
+    # 'new' es un estado que no se usa actualmente en BD, devolvemos 0
+    new_count = 0
     
     total = new_count + in_progress_count + done_count
     
