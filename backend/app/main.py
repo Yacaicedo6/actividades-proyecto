@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 from . import models, schemas, crud, auth
-from .database import engine, Base, get_db
+from .database import engine, Base, get_db, SessionLocal
 from .email_service import send_invitation_email, send_deadline_email, send_assignment_notification_email
 import csv
 import io
@@ -47,15 +47,18 @@ app.add_middleware(
 # Health check endpoint (antes de autenticación)
 @app.get('/health')
 def health_check():
+    return {"status": "ok", "service": "actividades-proyecto", "database": "PostgreSQL"}
+
+@app.get('/api/health')
+def health_check_detailed():
     try:
-        from .database import SessionLocal
         db = SessionLocal()
         db.execute("SELECT 1")
         db.close()
         return {"status": "ok", "database": "connected"}
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {"status": "error", "database": str(e)}, 500
+        return {"status": "error", "database": str(e)}
 
 @app.post('/register', response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
