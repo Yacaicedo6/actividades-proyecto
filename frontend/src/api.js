@@ -44,6 +44,14 @@ export async function getCurrentUser(token){
   return await res.json()
 }
 
+export async function getIndicators(token){
+  const res = await fetch(`${API_BASE}/indicators`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  if(!res.ok) throw new Error('Failed to get indicators')
+  return await res.json()
+}
+
 export async function fetchActivities(token, status = null, assignedTo = null, page = 1, perPage = 10){
   const params = new URLSearchParams()
   if(status) params.append('status', status)

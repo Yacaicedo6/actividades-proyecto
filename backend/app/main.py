@@ -96,6 +96,11 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         logger.exception(f"Login error: {e}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
+@app.get('/indicators', response_model=list[schemas.IndicatorOut])
+def get_indicators(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    """Get all available indicators"""
+    return crud.get_all_indicators(db)
+
 @app.post('/activities')
 def create_activity(activity: schemas.ActivityCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     db_act = crud.create_activity(db, owner_id=current_user.id, activity=activity)
@@ -111,6 +116,7 @@ def create_activity(activity: schemas.ActivityCreate, current_user: models.User 
         'timestamp': db_act.timestamp.isoformat() if db_act.timestamp else None,
         'updated_at': db_act.updated_at.isoformat() if db_act.updated_at else None,
         'owner_id': db_act.owner_id,
+        'indicator_id': db_act.indicator_id,
         'subtasks': [],
         'files': []
     }

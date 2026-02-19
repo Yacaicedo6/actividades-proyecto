@@ -3,6 +3,14 @@ from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
 
+class Indicator(Base):
+    __tablename__ = "indicators"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    activities = relationship("Activity", back_populates="indicator")
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -29,7 +37,9 @@ class Activity(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     owner_id = Column(Integer, ForeignKey("users.id"))
+    indicator_id = Column(Integer, ForeignKey("indicators.id"), nullable=False)
     owner = relationship("User", back_populates="activities")
+    indicator = relationship("Indicator", back_populates="activities")
     history = relationship("ActivityHistory", back_populates="activity")
     subtasks = relationship("SubActivity", back_populates="activity", cascade="all, delete-orphan")
     files = relationship("ActivityFile", back_populates="activity", cascade="all, delete-orphan")

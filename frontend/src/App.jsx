@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, exportWeeklyCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser, updateUserRole, deleteUser } from './api'
+import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, exportWeeklyCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser, updateUserRole, deleteUser, getIndicators } from './api'
 
 export default function App(){
   const [token, setToken] = useState(null)
@@ -24,10 +24,15 @@ export default function App(){
   const [activitySubtasks, setActivitySubtasks] = useState({})
   const [subtaskInput, setSubtaskInput] = useState({})
   
+  // Indicators state
+  const [indicators, setIndicators] = useState([])
+  const [selectedIndicatorId, setSelectedIndicatorId] = useState('')
+  
   // Collaborators state
   const [collaborators, setCollaborators] = useState([])
   const [showCollaboratorAssign, setShowCollaboratorAssign] = useState(null)
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState(null)
+  const [collaboratorSearchTerm, setCollaboratorSearchTerm] = useState('')
 
   useEffect(()=>{
     const savedToken = localStorage.getItem('auth_token')
@@ -69,6 +74,7 @@ export default function App(){
       loadActivities()
       loadCollaborators()
       loadCurrentUser()  // Cargar datos del usuario
+      loadIndicators()  // Cargar indicadores
     }
   },[token, filterStatus, currentPage])
 
@@ -86,6 +92,18 @@ export default function App(){
       setCurrentUser(user)
     }catch(err){
       console.error('Error al cargar usuario:', err.message)
+    }
+  }
+  
+  async function loadIndicators(){
+    try{
+      const data = await getIndicators(token)
+      setIndicators(data)
+      if(data.length > 0 && !selectedIndicatorId){
+        setSelectedIndicatorId(data[0].id)  // Seleccionar el primero por defecto
+      }
+    }catch(err){
+      console.error('Error al cargar indicadores:', err.message)
     }
   }
   
@@ -134,12 +152,17 @@ export default function App(){
   }
   async function submit(){
     try{
-      const payload = {title, description, injected_by: username}
+      if(!selectedIndicatorId){
+        alert('Por favor selecciona un indicador')
+        return
+      }
+      const payload = {title, description, injected_by: username, indicator_id: parseInt(selectedIndicatorId)}
       if(dueDate) payload.due_date = new Date(dueDate).toISOString()
       await createActivity(token, payload)
       setTitle('')
       setDescription('')
       setDueDate('')
+      setSelectedIndicatorId(indicators.length > 0 ? indicators[0].id : '')  // Reset al primero
       setCurrentPage(1)
       loadActivities()
     }catch(err){
@@ -211,6 +234,34 @@ export default function App(){
       }
     }catch(err){
       alert('Error al cambiar fecha: ' + err.message)
+    }
+  }
+  async function changeIndicator(id, currentIndicatorId){
+    try{
+      if(indicators.length === 0){
+        alert('No hay indicadores disponibles')
+        return
+      }
+      const currentIndicator = indicators.find(i => i.id === currentIndicatorId)
+      let message = '¿Cuál es el indicador correcto para esta actividad?\n\n'
+      indicators.forEach((ind, idx) => {
+        message += `${idx + 1}. ${ind.name}\n`
+      })
+      message += `\nActual: ${currentIndicator ? currentIndicator.name : 'Desconocido'}\n\nIngresa el número:`
+      const choice = prompt(message)
+      if(choice !== null){
+        const selectedIndex = parseInt(choice) - 1
+        if(selectedIndex >= 0 && selectedIndex < indicators.length){
+          const newIndicatorId = indicators[selectedIndex].id
+          await updateActivity(token, id, {indicator_id: newIndicatorId})
+          loadActivities()
+          alert('Indicador actualizado correctamente')
+        }else{
+          alert('Número inválido')
+        }
+      }
+    }catch(err){
+      alert('Error al cambiar indicador: ' + err.message)
     }
   }
   function getDeadlineStatus(dueDate){
@@ -478,49 +529,109 @@ export default function App(){
       {currentUser?.role === 'Admin' && (
         <div style={{backgroundColor: '#f0f8ff', border: '2px solid #17a2b8', padding: 15, marginBottom: 15, borderRadius: '8px'}}>
           <h3 style={{margin: '0 0 10px 0'}}>Colaboradores Disponibles ({collaborators.length})</h3>
+          
+          {/* Campo de búsqueda */}
+          <input 
+            type="text"
+            placeholder="Buscar por nombre..."
+            value={collaboratorSearchTerm}
+            onChange={e => setCollaboratorSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '15px',
+              fontSize: '1em',
+              border: '2px solid #17a2b8',
+              borderRadius: '6px',
+              boxSizing: 'border-box'
+            }}
+          />
+          
           {collaborators.length === 0 ? (
             <p style={{color: '#666', fontSize: '0.9em', margin: 0}}>Sin colaboradores registrados. Los usuarios que se registren aparecerán aquí.</p>
           ) : (
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10}}>
-              {collaborators.map(colab => (
-                <div key={colab.id} style={{backgroundColor: 'white', border: '1px solid #ddd', padding: 12, borderRadius: '6px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'}}>
-                  <p style={{margin: '0 0 5px 0', fontWeight: 'bold', color: '#333', fontSize: '1em'}}>{colab.username}</p>
-                  <p style={{margin: '0 0 5px 0', fontSize: '0.85em', color: '#666', wordBreak: 'break-all'}}>{colab.email || 'Sin email'}</p>
-                  {colab.last_login ? (
-                    <p style={{margin: '0 0 8px 0', fontSize: '0.8em', color: '#999'}}>
-                      Último login: {new Date(colab.last_login).toLocaleString()}
+            <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+              {collaborators
+                .filter(colab => {
+                  const searchLower = collaboratorSearchTerm.toLowerCase()
+                  return colab.username.toLowerCase().includes(searchLower) || 
+                         (colab.full_name && colab.full_name.toLowerCase().includes(searchLower)) ||
+                         (colab.email && colab.email.toLowerCase().includes(searchLower))
+                })
+                .map(colab => (
+                <div key={colab.id} style={{
+                  backgroundColor: 'white', 
+                  border: '1px solid #ddd', 
+                  padding: 12, 
+                  borderRadius: '6px', 
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div style={{flex: 1}}>
+                    <p style={{margin: '0 0 4px 0', fontWeight: 'bold', color: '#333', fontSize: '1.05em'}}>
+                      {colab.full_name || colab.username}
                     </p>
-                  ) : (
-                    <p style={{margin: '0 0 8px 0', fontSize: '0.8em', color: '#999'}}>Nunca ha iniciado sesión</p>
-                  )}
-                  <div style={{display: 'flex', gap: 6, marginTop: 8}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '0.85em', color: '#666'}}>
+                      {colab.email || 'Sin email'}
+                    </p>
+                    <p style={{margin: 0, fontSize: '0.8em', color: '#999'}}>
+                      {colab.last_login ? (
+                        <>Último login: {new Date(colab.last_login).toLocaleString()}</>
+                      ) : (
+                        <>Nunca ha iniciado sesión</>
+                      )}
+                    </p>
+                  </div>
+                  <div style={{display: 'flex', gap: 8}}>
                     <button 
                       onClick={() => {
-                        if(window.confirm(`¿Hacer admin a ${colab.username}?`)) {
+                        if(window.confirm(`¿Promover a ${colab.username} como Admin?`)) {
                           updateUserRole(token, colab.id, 'Admin')
                             .then(() => {
-                              alert('Rol actualizado')
+                              alert('Rol actualizado correctamente')
                               loadCollaborators()
                             })
                             .catch(e => alert('Error: ' + e.message))
                         }
                       }}
-                      style={{flex: 1, padding: '6px 8px', fontSize: '0.8em', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer'}}
+                      style={{
+                        padding: '8px 16px', 
+                        fontSize: '0.85em', 
+                        backgroundColor: '#28a745', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                      title="Promover a Admin"
                     >
-                      Hacer Admin
+                      Promover a Admin
                     </button>
                     <button 
                       onClick={() => {
-                        if(window.confirm(`¿Eliminar a ${colab.username}?`)) {
+                        if(window.confirm(`¿Estás seguro de eliminar a ${colab.username}? Esta acción no se puede deshacer.`)) {
                           deleteUser(token, colab.id)
                             .then(() => {
-                              alert('Usuario eliminado')
+                              alert('Usuario eliminado correctamente')
                               loadCollaborators()
                             })
                             .catch(e => alert('Error: ' + e.message))
                         }
                       }}
-                      style={{flex: 1, padding: '6px 8px', fontSize: '0.8em', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer'}}
+                      style={{
+                        padding: '8px 16px', 
+                        fontSize: '0.85em', 
+                        backgroundColor: '#dc3545', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                      title="Eliminar usuario"
                     >
                       Eliminar
                     </button>
@@ -552,6 +663,18 @@ export default function App(){
         <br/>
         <label style={{display: 'block', marginTop: 8, marginBottom: 4, fontWeight: 'bold'}}>Plazo de Entrega:</label>
         <input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} style={{padding: '6px', fontSize: '1em'}} />
+        <br/>
+        <label style={{display: 'block', marginTop: 12, marginBottom: 4, fontWeight: 'bold'}}>Indicador Clave: <span style={{color: 'red'}}>*</span></label>
+        <select 
+          value={selectedIndicatorId} 
+          onChange={e=>setSelectedIndicatorId(e.target.value)}
+          style={{width: '100%', padding: '8px', fontSize: '1em', border: '1px solid #ccc', borderRadius: '4px'}}
+        >
+          <option value="">-- Selecciona un indicador --</option>
+          {indicators.map(ind => (
+            <option key={ind.id} value={ind.id}>{ind.name}</option>
+          ))}
+        </select>
         <br/>
         <button onClick={submit}>Registrar actividad</button>
         <button onClick={doLogout}>Logout</button>
@@ -649,6 +772,10 @@ export default function App(){
                 <br/>
                 <em>Asignado: {a.assigned_to || 'Sin asignar'}</em>
                 <br/>
+                <em style={{color: '#0056b3', fontWeight: 'bold'}}>
+                  Indicador: {a.indicator ? a.indicator.name : `ID #${a.indicator_id}`}
+                </em>
+                <br/>
                 <em style={{color: getDeadlineStatus(a.due_date).color, fontWeight: 'bold'}}>
                   Plazo: {getDeadlineStatus(a.due_date).label}
                 </em>
@@ -658,6 +785,9 @@ export default function App(){
                 <button onClick={() => changeStatus(a.id, 'Completada')} style={{background: a.status === 'Completada' ? '#28a745' : '#ccc', color: 'white', marginRight: 4}}>Completada</button>
                 <button onClick={() => changeStatus(a.id, 'Cancelada')} style={{background: a.status === 'Cancelada' ? '#dc3545' : '#ccc', color: 'white', marginRight: 4}}>Cancelada</button>
                 <button onClick={() => setShowCollaboratorAssign(a.id)} style={{marginRight: 4, background: '#17a2b8', color: 'white'}}>Asignar Colaborador</button>
+                {currentUser?.role === 'Admin' && (
+                  <button onClick={() => changeIndicator(a.id, a.indicator_id)} style={{marginRight: 4, background: '#0056b3', color: 'white'}}>Cambiar Indicador</button>
+                )}
                 {currentUser?.role === 'Admin' && (
                   <button onClick={() => changeDueDate(a.id, a.due_date)} style={{marginRight: 4}}>Plazo</button>
                 )}
@@ -696,7 +826,7 @@ export default function App(){
                   ))}
                   <div style={{marginTop: 8, display: 'flex', gap: 4}}>
                     <input 
-                      placeholder="Nueva subtarea..." 
+                      placeholder="Nueva Subtarea..." 
                       value={subtaskInput[a.id] || ''}
                       onChange={e => setSubtaskInput({...subtaskInput, [a.id]: e.target.value})}
                       onKeyPress={e => e.key === 'Enter' && createNewSubtask(a.id)}

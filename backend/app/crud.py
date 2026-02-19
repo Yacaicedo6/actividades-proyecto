@@ -38,6 +38,7 @@ def create_activity(db: Session, owner_id: int, activity: schemas.ActivityCreate
         description=activity.description,
         injected_by=activity.injected_by,
         due_date=activity.due_date,
+        indicator_id=activity.indicator_id,
         owner_id=owner_id,
     )
     db.add(db_act)
@@ -152,6 +153,18 @@ def update_activity(db: Session, activity_id: int, owner_id: int, activity_updat
         )
         db.add(history)
         db_act.due_date = activity_update.due_date
+        changed = True
+    
+    if activity_update.indicator_id is not None and activity_update.indicator_id != db_act.indicator_id:
+        history = models.ActivityHistory(
+            activity_id=activity_id,
+            changed_by=username,
+            changed_field='indicator_id',
+            old_value=str(db_act.indicator_id),
+            new_value=str(activity_update.indicator_id)
+        )
+        db.add(history)
+        db_act.indicator_id = activity_update.indicator_id
         changed = True
     
     db.commit()
@@ -545,3 +558,9 @@ def create_admin_user(db: Session, current_user: models.User, payload: schemas.A
     db.commit()
     db.refresh(user)
     return user
+
+def get_all_indicators(db: Session):
+    return db.query(models.Indicator).all()
+
+def get_indicator_by_id(db: Session, indicator_id: int):
+    return db.query(models.Indicator).filter(models.Indicator.id == indicator_id).first()

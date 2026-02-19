@@ -61,17 +61,27 @@ class SubActivityOut(BaseModel):
     completed_at: Optional[datetime.datetime]
     timestamp: datetime.datetime
 
+class IndicatorOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    name: str
+    description: Optional[str]
+    created_at: datetime.datetime
+
 class ActivityCreate(BaseModel):
     title: str
     description: Optional[str] = None
     injected_by: Optional[str] = None
     due_date: Optional[datetime.datetime] = None
+    indicator_id: int
 
 class ActivityUpdate(BaseModel):
     status: Optional[str] = None
     assigned_to: Optional[str] = None
     description: Optional[str] = None
     due_date: Optional[datetime.datetime] = None
+    indicator_id: Optional[int] = None
 
 class ActivityOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -87,6 +97,8 @@ class ActivityOut(BaseModel):
     timestamp: datetime.datetime
     updated_at: datetime.datetime
     owner_id: int
+    indicator_id: int
+    indicator: Optional[IndicatorOut] = None
     subtasks: list[SubActivityOut] = []
     files: list[ActivityFileOut] = []
 
