@@ -19,7 +19,11 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created/verified successfully")
+except Exception as e:
+    logger.error(f"Error creating database tables: {e}")
 
 app = FastAPI(title="Seguimiento de Actividades - Prototipo")
 
@@ -37,32 +41,59 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=3600,
 )
+
+# Health check endpoint (antes de autenticación)
+@app.get('/health')
+def health_check():
+    try:
+        from .database import SessionLocal
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db.close()
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return {"status": "error", "database": str(e)}, 500
 
 @app.post('/register', response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    logger.info(f"Register attempt: username={user.username}")
-    existing = crud.get_user_by_username(db, user.username)
-    if existing:
-        logger.warning(f"Register failed: username already exists - {user.username}")
-        raise HTTPException(status_code=400, detail='Username already registered')
-    new_user = crud.create_user(db, user)
-    logger.info(f"User registered successfully: {user.username}")
-    return new_user
+    try:
+        logger.info(f"Register attempt: username={user.username}")
+        existing = crud.get_user_by_username(db, user.username)
+        if existing:
+            logger.warning(f"Register failed: username already exists - {user.username}")
+            raise HTTPException(status_code=400, detail='Username already registered')
+        new_user = crud.create_user(db, user)
+        logger.info(f"User registered successfully: {user.username}")
+        return new_user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Register error: {e}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 @app.post('/token', response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    logger.info(f"Login attempt: username={form_data.username}")
-    user = crud.authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        logger.warning(f"Login failed: invalid credentials for {form_data.username}")
-        raise HTTPException(status_code=400, detail='Incorrect username or password')
-    # Registrar último login
-    import datetime
-    user.last_login = datetime.datetime.utcnow()
-    db.commit()
-    access_token = auth.create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    try:
+        logger.info(f"Login attempt: username={form_data.username}")
+        user = crud.authenticate_user(db, form_data.username, form_data.password)
+        if not user:
+            logger.warning(f"Login failed: invalid credentials for {form_data.username}")
+            raise HTTPException(status_code=400, detail='Incorrect username or password')
+        # Registrar último login
+        import datetime
+        user.last_login = datetime.datetime.utcnow()
+        db.commit()
+        access_token = auth.create_access_token(data={"sub": user.username})
+        logger.info(f"Login successful for {user.username}")
+        return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 @app.post('/activities')
 def create_activity(activity: schemas.ActivityCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
