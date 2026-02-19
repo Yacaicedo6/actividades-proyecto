@@ -245,6 +245,29 @@ export async function listCollaborators(token){
   return await res.json()
 }
 
+export async function updateUserRole(token, userId, role){
+  const res = await fetch(`${API_BASE}/admin/users/${userId}/role?role=${role}`, {
+    method: 'PATCH',
+    headers: { 
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}` 
+    }
+  })
+  if(!res.ok) throw new Error('Failed to update user role')
+  return await res.json()
+}
+
+export async function deleteUser(token, userId){
+  const res = await fetch(`${API_BASE}/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: { 
+      Authorization: `Bearer ${token}` 
+    }
+  })
+  if(!res.ok) throw new Error('Failed to delete user')
+  return await res.json()
+}
+
 export async function assignActivityToCollaborator(token, activityId, collaboratorId){
   const res = await fetch(`${API_BASE}/activities/${activityId}/assign`, {
     method: 'POST',

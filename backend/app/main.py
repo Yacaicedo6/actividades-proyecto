@@ -45,6 +45,10 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     user = crud.authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=400, detail='Incorrect username or password')
+    # Registrar último login
+    import datetime
+    user.last_login = datetime.datetime.utcnow()
+    db.commit()
     access_token = auth.create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -360,6 +364,39 @@ def list_collaborators(current_user: models.User = Depends(auth.get_current_user
     if current_user.role != "Admin":
         raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden asignar colaboradores')
     return crud.list_collaborators(db, current_user.id)
+
+@app.patch('/admin/users/{user_id}/role')
+def update_user_role(user_id: int, role: str, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    """Actualizar rol de un usuario a Admin o collaborator"""
+    if current_user.role != "Admin":
+        raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden cambiar roles')
+    if role not in ["Admin", "collaborator"]:
+        raise HTTPException(status_code=400, detail='Rol inválido')
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='Usuario no encontrado')
+    
+    user.role = role
+    db.commit()
+    return {"success": True, "message": f"Rol actualizado a {role}"}
+
+@app.delete('/admin/users/{user_id}')
+def delete_user(user_id: int, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    """Eliminar un usuario (solo Admin)"""
+    if current_user.role != "Admin":
+        raise HTTPException(status_code=403, detail='Solo usuarios Admin pueden eliminar usuarios')
+    
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail='No puedes eliminar tu propia cuenta')
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='Usuario no encontrado')
+    
+    db.delete(user)
+    db.commit()
+    return {"success": True, "message": f"Usuario {user.username} eliminado"}
 
 @app.post('/activities/{activity_id}/assign', response_model=schemas.ActivityOut)
 def assign_activity(activity_id: int, body: schemas.AssignActivityRequest, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):

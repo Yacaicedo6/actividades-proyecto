@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser } from './api'
+import { login, register, fetchActivities, createActivity, updateActivity, deleteActivity, getActivityHistory, exportActivityCSV, createWebhook, listWebhooks, deleteWebhook, createSubtask, listSubtasks, updateSubtask, deleteSubtask, createActivityFile, listActivityFiles, downloadActivityFile, deleteActivityFile, getWeeklyDashboard, sendDueReminders, createInvitation, listInvitations, acceptInvitationLogin, listCollaborators, assignActivityToCollaborator, createAdminUser, getCurrentUser, updateUserRole, deleteUser } from './api'
 
 export default function App(){
   const [token, setToken] = useState(null)
@@ -314,7 +314,7 @@ export default function App(){
       const subs = await listSubtasks(token, activityId)
       setActivitySubtasks({...activitySubtasks, [activityId]: subs})
     }catch(err){
-      alert('Error al actualizar subtarea: ' + err.message)
+      alert('Error al actualizar Subtarea: ' + err.message)
     }
   }
   async function removeSubtask(activityId, subtaskId){
@@ -323,7 +323,7 @@ export default function App(){
       const subs = await listSubtasks(token, activityId)
       setActivitySubtasks({...activitySubtasks, [activityId]: subs})
     }catch(err){
-      alert('Error al eliminar subtarea: ' + err.message)
+      alert('Error al Eliminar Subtarea: ' + err.message)
     }
   }
   // Files
@@ -473,12 +473,50 @@ export default function App(){
           {collaborators.length === 0 ? (
             <p style={{color: '#666', fontSize: '0.9em', margin: 0}}>Sin colaboradores registrados. Los usuarios que se registren aparecerán aquí.</p>
           ) : (
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10}}>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10}}>
               {collaborators.map(colab => (
-                <div key={colab.id} style={{backgroundColor: 'white', border: '1px solid #ddd', padding: 10, borderRadius: '6px'}}>
-                  <p style={{margin: '0 0 5px 0', fontWeight: 'bold', color: '#333'}}>{colab.username}</p>
+                <div key={colab.id} style={{backgroundColor: 'white', border: '1px solid #ddd', padding: 12, borderRadius: '6px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'}}>
+                  <p style={{margin: '0 0 5px 0', fontWeight: 'bold', color: '#333', fontSize: '1em'}}>{colab.username}</p>
                   <p style={{margin: '0 0 5px 0', fontSize: '0.85em', color: '#666', wordBreak: 'break-all'}}>{colab.email || 'Sin email'}</p>
-                  <span style={{backgroundColor: '#17a2b8', color: 'white', padding: '2px 6px', borderRadius: 3, fontSize: '0.8em'}}>COLABORADOR</span>
+                  {colab.last_login ? (
+                    <p style={{margin: '0 0 8px 0', fontSize: '0.8em', color: '#999'}}>
+                      Último login: {new Date(colab.last_login).toLocaleString()}
+                    </p>
+                  ) : (
+                    <p style={{margin: '0 0 8px 0', fontSize: '0.8em', color: '#999'}}>Nunca ha iniciado sesión</p>
+                  )}
+                  <div style={{display: 'flex', gap: 6, marginTop: 8}}>
+                    <button 
+                      onClick={() => {
+                        if(window.confirm(`¿Hacer admin a ${colab.username}?`)) {
+                          updateUserRole(token, colab.id, 'Admin')
+                            .then(() => {
+                              alert('Rol actualizado')
+                              loadCollaborators()
+                            })
+                            .catch(e => alert('Error: ' + e.message))
+                        }
+                      }}
+                      style={{flex: 1, padding: '6px 8px', fontSize: '0.8em', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer'}}
+                    >
+                      Hacer Admin
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if(window.confirm(`¿Eliminar a ${colab.username}?`)) {
+                          deleteUser(token, colab.id)
+                            .then(() => {
+                              alert('Usuario eliminado')
+                              loadCollaborators()
+                            })
+                            .catch(e => alert('Error: ' + e.message))
+                        }
+                      }}
+                      style={{flex: 1, padding: '6px 8px', fontSize: '0.8em', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer'}}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

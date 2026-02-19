@@ -157,14 +157,17 @@ def update_activity(db: Session, activity_id: int, owner_id: int, activity_updat
     db.commit()
     db.refresh(db_act)
     
-    # Enviar webhooks si hubo cambio
+    # Enviar webhooks si hubo cambio (sin romper si falla)
     if changed:
-        send_webhooks(db, owner_id, 'activity_updated', {
-            'id': db_act.id,
-            'title': db_act.title,
-            'status': db_act.status,
-            'assigned_to': db_act.assigned_to
-        })
+        try:
+            send_webhooks(db, owner_id, 'activity_updated', {
+                'id': db_act.id,
+                'title': db_act.title,
+                'status': db_act.status,
+                'assigned_to': db_act.assigned_to
+            })
+        except Exception as e:
+            logger.error(f"Error enviando webhooks: {str(e)}")
     
     return db_act
 

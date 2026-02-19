@@ -21,35 +21,51 @@ def send_invitation_email(to_email: str, activity_title: str, invitation_token: 
         acceptance_link = f"{FRONTEND_URL}?token={invitation_token}"
 
         text_content = f"""
+Invitacion a colaborar
+
 Hola,
 
-{inviter_name} te ha invitado a colaborar en la tarea de gestión:
+{inviter_name} te ha invitado a colaborar en la tarea de gestion:
 
 {activity_title}
 
-Para aceptar la invitación, haz clic en el siguiente enlace:
+Para aceptar la invitacion, haz clic en el siguiente enlace o copialo en tu navegador:
 {acceptance_link}
 
-Este enlace expirará en 7 días.
+Este enlace expirara en 7 dias.
 
-¡Saludos!
+Saludos,
 Sistema de Seguimiento de Actividades
+
+---
+Este correo fue enviado porque {inviter_name} te invito a colaborar.
+Si no reconoces esta invitacion, puedes ignorar este mensaje.
 """
 
         html_content = f"""
 <html>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-      <h2 style="color: #2c3e50;">¡Has sido invitado a colaborar!</h2>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <h2 style="color: #2c3e50; margin-top: 0;">Invitacion a colaborar</h2>
       <p><strong>{inviter_name}</strong> te ha invitado a trabajar en:</p>
       <div style="background-color: #ecf0f1; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
         <h3 style="margin: 0; color: #2c3e50;">{activity_title}</h3>
       </div>
-      <p>Para aceptar la invitación y acceder a la tarea, haz clic en el botón:</p>
+      <p>Para aceptar la invitacion y acceder a la tarea, haz clic en el boton:</p>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="{acceptance_link}" style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Aceptar Invitación</a>
+        <a href="{acceptance_link}" style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Aceptar Invitacion</a>
       </div>
-      <p style="color: #7f8c8d; font-size: 0.9em;">Este enlace expirará en 7 días.</p>
+      <p style="color: #7f8c8d; font-size: 0.9em;">Este enlace expirara en 7 dias.</p>
+      <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+      <p style="font-size: 0.85em; color: #999; text-align: center; margin: 0;">
+        Sistema de Seguimiento de Actividades<br>
+        Este correo fue enviado porque {inviter_name} te invito a colaborar.<br>
+        Si no reconoces esta invitacion, puedes ignorar este mensaje.
+      </p>
     </div>
   </body>
 </html>
@@ -58,10 +74,13 @@ Sistema de Seguimiento de Actividades
         message = Mail(
             from_email=Email(SENDGRID_EMAIL, "Sistema de Actividades"),
             to_emails=To(to_email),
-            subject=f"¡Has sido invitado a: {activity_title}!",
+            subject=f"Invitacion a colaborar: {activity_title}",
             plain_text_content=Content("text/plain", text_content),
             html_content=Content("text/html", html_content)
         )
+        
+        # Configurar categorías para seguimiento y mejorar deliverability
+        message.category = ["invitacion", "colaboracion"]
 
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)

@@ -11,6 +11,8 @@ class User(Base):
     full_name = Column(String, nullable=True)
     role = Column(String, default="collaborator", index=True)  # Admin | collaborator
     hashed_password = Column(String, nullable=False)
+    last_login = Column(DateTime, nullable=True)  # Último login
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     activities = relationship("Activity", back_populates="owner")
     shared_activities = relationship("ActivityAccess", back_populates="user")
 
