@@ -67,7 +67,7 @@ class IndicatorOut(BaseModel):
     id: int
     name: str
     description: Optional[str]
-    created_at: datetime.datetime
+    created_at: Optional[datetime.datetime] = None
 
 class ActivityCreate(BaseModel):
     title: str
