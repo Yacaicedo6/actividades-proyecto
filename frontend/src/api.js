@@ -1,25 +1,39 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 
 export async function register(username, password){
-  const res = await fetch(`${API_BASE}/register`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({username, password})
-  })
-  if(!res.ok) throw new Error('Register failed')
-  return await res.json()
+  try {
+    const res = await fetch(`${API_BASE}/register`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    })
+    if(!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(`Register failed: ${res.status} ${res.statusText} - ${errData.detail || errData.message || ''}`)
+    }
+    return await res.json()
+  } catch(err) {
+    throw new Error(`Registro: ${err.message}. API: ${API_BASE}`)
+  }
 }
 
 export async function login(username, password){
-  const params = new URLSearchParams()
-  params.append('username', username)
-  params.append('password', password)
-  const res = await fetch(`${API_BASE}/token`, {
-    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body: params
-  })
-  if(!res.ok) throw new Error('Login failed')
-  const data = await res.json()
-  return data.access_token
+  try {
+    const params = new URLSearchParams()
+    params.append('username', username)
+    params.append('password', password)
+    const res = await fetch(`${API_BASE}/token`, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: params
+    })
+    if(!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(`Login failed: ${res.status} ${res.statusText} - ${errData.detail || errData.message || ''}`)
+    }
+    const data = await res.json()
+    return data.access_token
+  } catch(err) {
+    throw new Error(`Login: ${err.message}. API: ${API_BASE}`)
+  }
 }
 
 export async function getCurrentUser(token){
