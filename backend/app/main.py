@@ -105,6 +105,14 @@ def get_indicators(current_user: models.User = Depends(auth.get_current_user), d
 def create_activity(activity: schemas.ActivityCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     db_act = crud.create_activity(db, owner_id=current_user.id, activity=activity)
     # Return a simple JSON representation to avoid response-model serialization issues
+    indicator_data = None
+    if db_act.indicator:
+        indicator_data = {
+            'id': db_act.indicator.id,
+            'name': db_act.indicator.name,
+            'description': db_act.indicator.description,
+            'created_at': db_act.indicator.created_at.isoformat() if db_act.indicator.created_at else None
+        }
     return {
         'id': db_act.id,
         'title': db_act.title,
@@ -112,11 +120,13 @@ def create_activity(activity: schemas.ActivityCreate, current_user: models.User 
         'injected_by': db_act.injected_by,
         'status': db_act.status,
         'assigned_to': db_act.assigned_to,
+        'assigned_email': db_act.assigned_email,
         'due_date': db_act.due_date.isoformat() if db_act.due_date else None,
         'timestamp': db_act.timestamp.isoformat() if db_act.timestamp else None,
         'updated_at': db_act.updated_at.isoformat() if db_act.updated_at else None,
         'owner_id': db_act.owner_id,
         'indicator_id': db_act.indicator_id,
+        'indicator': indicator_data,
         'subtasks': [],
         'files': []
     }
@@ -138,17 +148,30 @@ def update_activity(activity_id: int, activity_update: schemas.ActivityUpdate, c
     if not result:
         raise HTTPException(status_code=404, detail='Activity not found')
     # Return simple JSON to avoid serialization issues
+    indicator_data = None
+    if result.indicator:
+        indicator_data = {
+            'id': result.indicator.id,
+            'name': result.indicator.name,
+            'description': result.indicator.description,
+            'created_at': result.indicator.created_at.isoformat() if result.indicator.created_at else None
+        }
     return {
         'id': result.id,
         'title': result.title,
         'description': result.description,
         'status': result.status,
         'assigned_to': result.assigned_to,
+        'assigned_email': result.assigned_email,
         'due_date': result.due_date.isoformat() if result.due_date else None,
         'timestamp': result.timestamp.isoformat() if result.timestamp else None,
         'updated_at': result.updated_at.isoformat() if result.updated_at else None,
         'injected_by': result.injected_by,
-        'owner_id': result.owner_id
+        'owner_id': result.owner_id,
+        'indicator_id': result.indicator_id,
+        'indicator': indicator_data,
+        'subtasks': [],
+        'files': []
     }
 
 @app.delete('/activities/{activity_id}')
