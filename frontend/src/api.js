@@ -186,7 +186,7 @@ export async function listActivityFiles(token, activityId){
     headers: { Authorization: `Bearer ${token}` }
   })
   if(!res.ok) return []
-  return await res.json(-
+  return await res.json()
 }
 
 export function downloadActivityFile(token, activityId, fileId){
