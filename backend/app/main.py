@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import Optional
 from . import models, schemas, crud, auth
 from .database import engine, Base, get_db, SessionLocal
