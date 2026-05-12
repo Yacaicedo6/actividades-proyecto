@@ -22,7 +22,7 @@ class UserCreate(BaseModel):
     @classmethod
     def validate_password(cls, v):
         if len(v) < 6:
-            raise ValueError('Contraseña debe tener al menos 6 caracteres')
+            raise ValueError('Contrasena debe tener al menos 6 caracteres')
         return v
 
 class UserOut(BaseModel):
@@ -83,6 +83,18 @@ class ActivityUpdate(BaseModel):
     due_date: Optional[datetime.datetime] = None
     indicator_id: Optional[int] = None
 
+class ActivityFileOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    activity_id: int
+    filename: str
+    file_path: str
+    file_size: Optional[int]
+    file_type: Optional[str]
+    uploaded_by: Optional[str]
+    timestamp: datetime.datetime
+
 class ActivityOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
@@ -113,18 +125,6 @@ class ActivityHistoryOut(BaseModel):
 
     class Config:
         from_attributes = True
-
-class ActivityFileOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    
-    id: int
-    activity_id: int
-    filename: str
-    file_path: str
-    file_size: Optional[int]
-    file_type: Optional[str]
-    uploaded_by: Optional[str]
-    timestamp: datetime.datetime
 
 class PaginatedActivityOut(BaseModel):
     total: int

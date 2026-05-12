@@ -53,7 +53,7 @@ def health_check():
 def health_check_detailed():
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         return {"status": "ok", "database": "connected"}
     except Exception as e:
