@@ -1,10 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 
-export async function register(username, password){
+export async function register(username, password, email = null){
   try {
+    const body = { username, password }
+    if(email) body.email = email
     const res = await fetch(`${API_BASE}/register`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({username, password})
+      body: JSON.stringify(body)
     })
     if(!res.ok) {
       const errData = await res.json().catch(() => ({}))

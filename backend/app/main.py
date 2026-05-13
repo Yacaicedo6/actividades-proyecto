@@ -368,8 +368,6 @@ def delete_subtask(activity_id: int, subtask_id: int, current_user: models.User 
 
 @app.get('/dashboard/weekly')
 def get_weekly_dashboard(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
-    if current_user.role != "Admin":
-        raise HTTPException(status_code=403, detail="Dashboard solo disponible para usuarios Admin")
     return crud.get_weekly_dashboard(db, current_user)
 
 
