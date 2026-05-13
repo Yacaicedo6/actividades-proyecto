@@ -1,36 +1,55 @@
 import os
-import smtplib
+import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from .logging_config import logger
 
 load_dotenv()
 
+GMAIL_CLIENT_ID = os.getenv("GMAIL_CLIENT_ID")
+GMAIL_CLIENT_SECRET = os.getenv("GMAIL_CLIENT_SECRET")
+GMAIL_REFRESH_TOKEN = os.getenv("GMAIL_REFRESH_TOKEN")
 GMAIL_USER = os.getenv("GMAIL_USER")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
+def _get_gmail_service():
+    creds = Credentials(
+        token=None,
+        refresh_token=GMAIL_REFRESH_TOKEN,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=GMAIL_CLIENT_ID,
+        client_secret=GMAIL_CLIENT_SECRET,
+        scopes=["https://www.googleapis.com/auth/gmail.send"]
+    )
+    return build("gmail", "v1", credentials=creds)
+
+
 def _send_email(to_email: str, subject: str, html_content: str) -> bool:
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        logger.warning("Gmail no configurado. GMAIL_USER o GMAIL_APP_PASSWORD faltante")
+    if not all([GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_USER]):
+        logger.warning("Gmail API no configurada. Faltan variables de entorno.")
         return False
     try:
+        service = _get_gmail_service()
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = f"Sistema de Actividades <{GMAIL_USER}>"
         msg["To"] = to_email
         msg.attach(MIMEText(html_content, "html"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            server.sendmail(GMAIL_USER, to_email, msg.as_string())
-
+        raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+        service.users().messages().send(userId="me", body={"raw": raw}).execute()
         logger.info(f"Email enviado correctamente a {to_email}")
         return True
+    except HttpError as e:
+        logger.error(f"Error HTTP al enviar email a {to_email}: {e}", exc_info=True)
+        return False
     except Exception as e:
-        logger.error(f"Error al enviar email a {to_email}: {str(e)}", exc_info=True)
+        logger.error(f"Error al enviar email a {to_email}: {e}", exc_info=True)
         return False
 
 
